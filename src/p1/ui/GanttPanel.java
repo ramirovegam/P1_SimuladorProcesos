@@ -3,6 +3,7 @@ package p1.ui;
 import p1.engine.Segment;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -15,6 +16,29 @@ public class GanttPanel extends JPanel {
         this.segments = segments != null ? segments : Collections.emptyList();
         repaint();
     }
+    
+    //metodo de la animacion
+    public void animarSegmentos(List<Segment> todos) {
+    segments = new ArrayList<>();
+    if (todos == null || todos.isEmpty()) return;
+
+    Timer timer = new Timer(400, null); // 400 ms entre cada segmento
+    final int[] index = {0};
+
+    timer.addActionListener(e -> {
+        if (index[0] < todos.size()) {
+            segments.add(todos.get(index[0]));
+            repaint();
+            index[0]++;
+        } else {
+            timer.stop();
+        }
+    });
+
+    timer.start();
+}
+    
+    
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -88,4 +112,5 @@ public class GanttPanel extends JPanel {
         }
         g2.dispose();
     }
+    
 }
