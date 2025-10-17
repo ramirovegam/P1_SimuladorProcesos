@@ -93,6 +93,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jRepetir = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         textAreaResultados = new javax.swing.JTextArea();
+        jLabel8 = new javax.swing.JLabel();
+        quantumActual = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -112,7 +114,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jLabel5.setText("Tiempo llegada");
 
-        jLabel6.setText("CPU Burst");
+        jLabel6.setText("Rafaga (burst time)");
 
         jLabel1.setText("Quantum");
 
@@ -240,6 +242,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         textAreaResultados.setRows(5);
         jScrollPane1.setViewportView(textAreaResultados);
 
+        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel8.setText("Quantum:");
+
+        quantumActual.setForeground(new java.awt.Color(255, 255, 255));
+        quantumActual.setText("0");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -251,7 +259,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                         .addGap(12, 12, 12)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel3Layout.createSequentialGroup()
+                                    .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(quantumActual, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addComponent(jScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 635, Short.MAX_VALUE)
                                 .addComponent(panelGantt, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -270,7 +283,10 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addGap(3, 3, 3)
                 .addComponent(jScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel7)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(quantumActual))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelGantt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -278,7 +294,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addGap(1, 1, 1)
                 .addComponent(jLabel4)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
                 .addGap(17, 17, 17))
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
@@ -369,6 +385,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             int q = Integer.parseInt(quantum.getText().trim());
             if (q <= 0) throw new NumberFormatException();
             planificador = new p1.schedule.RR(q);
+            quantumActual.setText(String.valueOf(q));
         } catch (NumberFormatException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Quantum debe ser un número entero positivo.");
             return;
@@ -489,6 +506,7 @@ private Planificador crearPlanificador() {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -498,6 +516,7 @@ private Planificador crearPlanificador() {
     private javax.swing.JTabbedPane jTabbedPane4;
     private javax.swing.JPanel panelGantt;
     private javax.swing.JTextField quantum;
+    private javax.swing.JLabel quantumActual;
     private javax.swing.JButton simularRun;
     private javax.swing.JTable tablaProcesos;
     private javax.swing.JTextArea textAreaResultados;
