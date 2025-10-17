@@ -323,7 +323,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         try {
             int q = Integer.parseInt(quantum.getText().trim());
             if (q <= 0) throw new NumberFormatException();
-            planificador = new p1.scheduler.RR(q);
+            planificador = new p1.schedule.RR(q);
         } catch (NumberFormatException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Quantum debe ser un número entero positivo.");
             return;

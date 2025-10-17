@@ -1,5 +1,5 @@
 
-package p1.scheduler;
+package p1.schedule;
 
 import p1.engine.Metrics;
 import p1.engine.Segment;
@@ -7,6 +7,7 @@ import p1.engine.SimulationResult;
 import p1.model.Proceso;
 
 import java.util.*;
+import p1.scheduler.Planificador;
 
 public class RR implements Planificador {
 
