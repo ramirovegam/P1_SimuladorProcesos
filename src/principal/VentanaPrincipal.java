@@ -2,12 +2,26 @@
 package principal;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import p1.engine.SimulationResult;
 import p1.model.Proceso;
@@ -16,7 +30,10 @@ import p1.scheduler.Planificador;
 import p1.scheduler.SJF;
 import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
-
+import p2.SimulationStep;
+import p2.FIFOAlgorithm;
+import p2.OptimalAlgorithm;
+import p2.PageReplacementAlgorithm;
 
 
 
@@ -32,6 +49,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private DefaultTableModel modeloTabla;
     private final GanttPanel gantt = new GanttPanel();
     private SimulationResult ultimoResultado;
+    private List<Integer> listaPaginas;
+    
     /**
      * Creates new form VentanaPrincipal
      */
@@ -39,6 +58,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         initComponents();
         initCustom();
         gantt.setPreferredSize(new Dimension(600, 200));
+        listaPaginas = new ArrayList<>();
     }
 
     private void initCustom() {
@@ -96,6 +116,20 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         quantumActual = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
+        jComboBoxAlgoritmos = new javax.swing.JComboBox<>();
+        jLabel9 = new javax.swing.JLabel();
+        jButtonSubirPaguina = new javax.swing.JButton();
+        jButtonRUNRemplazo = new javax.swing.JButton();
+        jComboBoxPaguina = new javax.swing.JComboBox<>();
+        jLabel13 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTablePaguinas = new javax.swing.JTable();
+        Paguinas = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
+        jPanelTablaPasoaPaso = new javax.swing.JPanel();
+        jPanelResultadosRemplazo = new javax.swing.JPanel();
+        jLabel12 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -301,17 +335,154 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jTabbedPane4.addTab("Algoritmos de planificacion", jPanel3);
 
-        jPanel4.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel4.setBackground(new java.awt.Color(0, 0, 0));
+
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+
+        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Optimo", "LRU" }));
+        jComboBoxAlgoritmos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxAlgoritmosActionPerformed(evt);
+            }
+        });
+
+        jLabel9.setText("Algoritmo");
+
+        jButtonSubirPaguina.setText("Subir paguina");
+        jButtonSubirPaguina.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSubirPaguinaActionPerformed(evt);
+            }
+        });
+
+        jButtonRUNRemplazo.setBackground(new java.awt.Color(0, 0, 0));
+        jButtonRUNRemplazo.setForeground(new java.awt.Color(255, 255, 255));
+        jButtonRUNRemplazo.setText("RUN");
+        jButtonRUNRemplazo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRUNRemplazoActionPerformed(evt);
+            }
+        });
+
+        jComboBoxPaguina.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }));
+
+        jLabel13.setText("Paguina");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(16, 16, 16)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, 125, Short.MAX_VALUE)
+                        .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(34, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(10, 10, 10)
+                .addComponent(jLabel9)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jComboBoxAlgoritmos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(23, 23, 23)
+                .addComponent(jLabel13)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jButtonSubirPaguina)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButtonRUNRemplazo)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jTablePaguinas.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane2.setViewportView(jTablePaguinas);
+
+        Paguinas.setForeground(new java.awt.Color(255, 255, 255));
+        Paguinas.setText("Paguinas");
+
+        jLabel11.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel11.setText("Simulacion");
+
+        jPanelTablaPasoaPaso.setEnabled(false);
+
+        javax.swing.GroupLayout jPanelTablaPasoaPasoLayout = new javax.swing.GroupLayout(jPanelTablaPasoaPaso);
+        jPanelTablaPasoaPaso.setLayout(jPanelTablaPasoaPasoLayout);
+        jPanelTablaPasoaPasoLayout.setHorizontalGroup(
+            jPanelTablaPasoaPasoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        jPanelTablaPasoaPasoLayout.setVerticalGroup(
+            jPanelTablaPasoaPasoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 155, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanelResultadosRemplazoLayout = new javax.swing.GroupLayout(jPanelResultadosRemplazo);
+        jPanelResultadosRemplazo.setLayout(jPanelResultadosRemplazoLayout);
+        jPanelResultadosRemplazoLayout.setHorizontalGroup(
+            jPanelResultadosRemplazoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 602, Short.MAX_VALUE)
+        );
+        jPanelResultadosRemplazoLayout.setVerticalGroup(
+            jPanelResultadosRemplazoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 163, Short.MAX_VALUE)
+        );
+
+        jLabel12.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel12.setText("Resultados");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 820, Short.MAX_VALUE)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGap(26, 26, 26)
+                        .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 602, Short.MAX_VALUE)
+                                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jPanelTablaPasoaPaso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 605, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Paguinas)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel11)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanelTablaPasoaPaso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(31, 31, 31)
+                .addComponent(jLabel12)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(109, Short.MAX_VALUE))
         );
 
         jTabbedPane4.addTab("Algoritmos de reemplazo de pagina", jPanel4);
@@ -432,7 +603,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         } else {
             quantum.setEnabled(false);
         }
-
     }//GEN-LAST:event_tipoAlgoritmoActionPerformed
 
     private void jRepetirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRepetirActionPerformed
@@ -444,6 +614,107 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Primero ejecuta una simulación.");
         }
     }//GEN-LAST:event_jRepetirActionPerformed
+
+    private void jComboBoxAlgoritmosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxAlgoritmosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBoxAlgoritmosActionPerformed
+
+    private void jButtonSubirPaguinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSubirPaguinaActionPerformed
+        
+  String seleccion = (String) jComboBoxPaguina.getSelectedItem();
+
+    if (seleccion != null && !seleccion.isEmpty()) {
+        try {
+            int paginaSeleccionada = Integer.parseInt(seleccion);
+
+            // Inicializar lista si está vacía
+            if (listaPaginas == null) {
+                listaPaginas = new ArrayList<>();
+            }
+
+            // Agregar página a la lista
+            listaPaginas.add(paginaSeleccionada);
+
+            // Crear modelo horizontal: una fila, columnas = páginas
+            DefaultTableModel model = new DefaultTableModel(1, listaPaginas.size());
+            String[] columnas = listaPaginas.stream()
+                                            .map(String::valueOf)
+                                            .toArray(String[]::new);
+            model.setColumnIdentifiers(columnas);
+            model.setValueAt("", 0, 0); // fila vacía
+            jTablePaguinas.setModel(model);
+
+            // Ajustar tamaño para evitar espacio gris
+            jTablePaguinas.setRowHeight(35);
+            jTablePaguinas.setPreferredScrollableViewportSize(
+                new Dimension(jTablePaguinas.getPreferredSize().width, 40)
+            );
+            jScrollPane2.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), 50));
+
+            // Renderer para encabezados en azul
+            jTablePaguinas.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value,
+                        boolean isSelected, boolean hasFocus, int row, int column) {
+                    JLabel header = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    header.setForeground(Color.BLUE);
+                    header.setFont(new Font("Arial", Font.BOLD, 14));
+                    header.setHorizontalAlignment(SwingConstants.CENTER);
+                    return header;
+                }
+            });
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Error: valor no numérico.");
+        }
+    } else {
+        JOptionPane.showMessageDialog(this, "Selecciona una página válida.");
+    }
+    }//GEN-LAST:event_jButtonSubirPaguinaActionPerformed
+
+    private void jButtonRUNRemplazoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNRemplazoActionPerformed
+    
+    try {
+        // Pedir número de marcos
+        String input = JOptionPane.showInputDialog(this, "Ingrese el número de marcos:", "Configuración", JOptionPane.QUESTION_MESSAGE);
+        if (input == null || input.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Debe ingresar un valor.");
+            return;
+        }
+        int frames = Integer.parseInt(input);
+
+        // Obtener algoritmo seleccionado
+        String algoritmoSeleccionado = (String) jComboBoxAlgoritmos.getSelectedItem();
+        PageReplacementAlgorithm algoritmo;
+
+        switch (algoritmoSeleccionado) {
+            case "FIFO":
+                algoritmo = new FIFOAlgorithm(frames);
+                break;
+            case "Optimo":
+                algoritmo = new OptimalAlgorithm(frames, listaPaginas);
+                break;
+            default:
+                JOptionPane.showMessageDialog(this, "Selecciona un algoritmo válido.");
+                return;
+        }
+        // Ejecutar simulación
+            p2.SimulatorController controller = new p2.SimulatorController();
+        List<p2.SimulationStep> pasos = controller.runSimulation(listaPaginas, algoritmo);
+
+        // Mostrar resultados en la tabla y panel
+        mostrarResultados(pasos, frames, algoritmo.getPageFaults());
+
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Número inválido.");
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Error al ejecutar la simulación: " + ex.getMessage());
+    }
+        
+        
+        
+        
+    }//GEN-LAST:event_jButtonRUNRemplazoActionPerformed
     
     
 private List<Proceso> leerProcesosDeTabla() {
@@ -467,7 +738,109 @@ private Planificador crearPlanificador() {
         default: return new FCFS();
     }
 }
+//=====Mostrar resultado========================================
+    private void mostrarResultados(List<SimulationStep> pasos, int frames, int pageFaults) {
+    DefaultTableModel model = new DefaultTableModel();
 
+    // Columnas = páginas
+    for (SimulationStep step : pasos) {
+        model.addColumn(String.valueOf(step.getPage()));
+    }
+
+    // Filas = marcos
+    for (int i = 0; i < frames; i++) {
+        model.addRow(new Object[pasos.size()]);
+    }
+
+    // Inicializar matriz con "-"
+    for (int row = 0; row < frames; row++) {
+        for (int col = 0; col < pasos.size(); col++) {
+            model.setValueAt("-", row, col);
+        }
+    }
+
+    // Llenar la tabla paso a paso
+    List<Integer[]> previousState = new ArrayList<>();
+    for (int i = 0; i < frames; i++) {
+        previousState.add(new Integer[pasos.size()]);
+    }
+
+    for (int col = 0; col < pasos.size(); col++) {
+        List<Integer> estado = pasos.get(col).getMemoryState();
+        Integer replacedIndex = pasos.get(col).getReplacedIndex();
+
+        for (int row = 0; row < frames; row++) {
+            String valor = (estado.get(row) != null) ? String.valueOf(estado.get(row)) : "-";
+
+            // Si no cambió respecto al paso anterior, deja el valor anterior
+            if (col > 0 && previousState.get(row)[col - 1] != null && previousState.get(row)[col - 1].equals(estado.get(row))) {
+                valor = String.valueOf(previousState.get(row)[col - 1]);
+            }
+
+            // Guardar estado actual
+            previousState.get(row)[col] = estado.get(row);
+
+            // Marcar reemplazo
+            if (replacedIndex != null && row == replacedIndex) {
+                valor += "*";
+            }
+
+            model.setValueAt(valor, row, col);
+        }
+    }
+
+    JTable tabla = new JTable(model);
+    tabla.setRowHeight(35);
+
+    // Renderer para colorear reemplazos
+    tabla.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            String val = (value != null) ? value.toString() : "";
+            if (val.endsWith("*")) {
+                c.setBackground(Color.RED);
+                c.setForeground(Color.WHITE);
+                setText(val.replace("*", ""));
+            } else {
+                c.setBackground(Color.WHITE);
+                c.setForeground(Color.BLACK);
+            }
+            setHorizontalAlignment(SwingConstants.CENTER);
+            return c;
+        }
+    });
+
+    JScrollPane scroll = new JScrollPane(tabla);
+    scroll.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), frames * 40));
+    jPanelTablaPasoaPaso.removeAll();
+    jPanelTablaPasoaPaso.setLayout(new BorderLayout());
+    jPanelTablaPasoaPaso.add(scroll, BorderLayout.CENTER);
+    jPanelTablaPasoaPaso.revalidate();
+    jPanelTablaPasoaPaso.repaint();
+
+    // Mostrar métricas
+    int total = pasos.size();
+    int aciertos = total - pageFaults;
+    double tasa = (aciertos * 100.0) / total;
+    jPanelResultadosRemplazo.removeAll();
+    jPanelResultadosRemplazo.setLayout(new GridLayout(3, 1));
+    jPanelResultadosRemplazo.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), 100));
+    JLabel lblAciertos = new JLabel("Número de aciertos: " + aciertos);
+    lblAciertos.setForeground(Color.GREEN);
+    lblAciertos.setFont(new Font("Arial", Font.BOLD, 14));
+    JLabel lblFallos = new JLabel("Fallos de página: " + pageFaults);
+    lblFallos.setForeground(Color.RED);
+    lblFallos.setFont(new Font("Arial", Font.BOLD, 14));
+    JLabel lblTasa = new JLabel(String.format("Tasa de acierto: %.2f%%", tasa));
+    lblTasa.setFont(new Font("Arial", Font.BOLD, 14));
+    jPanelResultadosRemplazo.add(lblAciertos);
+    jPanelResultadosRemplazo.add(lblFallos);
+    jPanelResultadosRemplazo.add(lblTasa);
+    jPanelResultadosRemplazo.revalidate();
+    jPanelResultadosRemplazo.repaint();
+}
+//=====Mostrar resultado Fin=====================================
     
     
     /**
@@ -496,10 +869,18 @@ private Planificador crearPlanificador() {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel Paguinas;
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField cpuBurst;
+    private javax.swing.JButton jButtonRUNRemplazo;
+    private javax.swing.JButton jButtonSubirPaguina;
+    private javax.swing.JComboBox<String> jComboBoxAlgoritmos;
+    private javax.swing.JComboBox<String> jComboBoxPaguina;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -507,13 +888,19 @@ private Planificador crearPlanificador() {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanelResultadosRemplazo;
+    private javax.swing.JPanel jPanelTablaPasoaPaso;
     private javax.swing.JButton jRepetir;
     private javax.swing.JScrollPane jScrollPane;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane4;
+    private javax.swing.JTable jTablePaguinas;
     private javax.swing.JPanel panelGantt;
     private javax.swing.JTextField quantum;
     private javax.swing.JLabel quantumActual;
@@ -523,4 +910,6 @@ private Planificador crearPlanificador() {
     private javax.swing.JTextField tiempoLlegada;
     private javax.swing.JComboBox<String> tipoAlgoritmo;
     // End of variables declaration//GEN-END:variables
+
+
 }
