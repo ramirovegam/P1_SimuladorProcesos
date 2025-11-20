@@ -32,6 +32,7 @@ import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
 import p2.SimulationStep;
 import p2.FIFOAlgorithm;
+import p2.LRUAlgorithm;
 import p2.OptimalAlgorithm;
 import p2.PageReplacementAlgorithm;
 
@@ -687,17 +688,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         String algoritmoSeleccionado = (String) jComboBoxAlgoritmos.getSelectedItem();
         PageReplacementAlgorithm algoritmo;
 
-        switch (algoritmoSeleccionado) {
-            case "FIFO":
-                algoritmo = new FIFOAlgorithm(frames);
-                break;
-            case "Optimo":
-                algoritmo = new OptimalAlgorithm(frames, listaPaginas);
-                break;
-            default:
-                JOptionPane.showMessageDialog(this, "Selecciona un algoritmo válido.");
-                return;
-        }
+    switch (algoritmoSeleccionado) {
+        case "FIFO": algoritmo = new FIFOAlgorithm(frames); break;
+        case "Optimo": algoritmo = new OptimalAlgorithm(frames, listaPaginas); break;
+        case "LRU": algoritmo = new LRUAlgorithm(frames); break;
+        default: JOptionPane.showMessageDialog(this, "Selecciona un algoritmo válido."); return;
+    }
         // Ejecutar simulación
             p2.SimulatorController controller = new p2.SimulatorController();
         List<p2.SimulationStep> pasos = controller.runSimulation(listaPaginas, algoritmo);

@@ -22,6 +22,8 @@ public class SimulatorController {
                 replacedIndex = ((p2.FIFOAlgorithm) algorithm).getLastReplacedIndex();
             } else if (algorithm instanceof p2.OptimalAlgorithm) {
                 replacedIndex = ((p2.OptimalAlgorithm) algorithm).getLastReplacedIndex();
+            } else if (algorithm instanceof p2.LRUAlgorithm) {
+            replacedIndex = ((p2.LRUAlgorithm) algorithm).getLastReplacedIndex();
             }
 
             // Crear el paso de simulación
