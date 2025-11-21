@@ -145,6 +145,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jButtonRUNRemplazo = new javax.swing.JButton();
         jComboBoxPaguina = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
+        jButtonLimpiarPaguinas = new javax.swing.JButton();
+        jButtonLimpiarTodo = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTablePaguinas = new javax.swing.JTable();
         Paguinas = new javax.swing.JLabel();
@@ -361,7 +363,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
-        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Optimo", "LRU", "Clock", "Second Chance", "VMIN", "Working Set", "PFF" }));
+        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "LRU", "Optimal Page Replacement", "Clock", "Second Chance", "VMIN(Variable MIN)", "Working Set", "PFF" }));
         jComboBoxAlgoritmos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxAlgoritmosActionPerformed(evt);
@@ -395,20 +397,39 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel13.setForeground(new java.awt.Color(0, 0, 0));
         jLabel13.setText("Paguinas");
 
+        jButtonLimpiarPaguinas.setBackground(new java.awt.Color(255, 0, 51));
+        jButtonLimpiarPaguinas.setForeground(new java.awt.Color(255, 255, 255));
+        jButtonLimpiarPaguinas.setText("Limpiar Secuencia");
+        jButtonLimpiarPaguinas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLimpiarPaguinasActionPerformed(evt);
+            }
+        });
+
+        jButtonLimpiarTodo.setText("🗑️ Limpiar Todo ");
+        jButtonLimpiarTodo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLimpiarTodoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(16, 16, 16)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonLimpiarTodo, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonLimpiarPaguinas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jComboBoxPaguina, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -423,9 +444,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButtonSubirPaguina)
+                .addGap(12, 12, 12)
+                .addComponent(jButtonLimpiarPaguinas)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButtonRUNRemplazo)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButtonLimpiarTodo)
+                .addGap(14, 14, 14))
         );
 
         jTablePaguinas.setModel(new javax.swing.table.DefaultTableModel(
@@ -439,7 +464,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTablePaguinas);
 
         Paguinas.setForeground(new java.awt.Color(255, 255, 255));
-        Paguinas.setText("Paguinas");
+        Paguinas.setText("Secuencia de Paguinas");
 
         jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setText("Simulacion");
@@ -464,24 +489,16 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel4Layout.createSequentialGroup()
-                            .addGap(26, 26, 26)
-                            .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel4Layout.createSequentialGroup()
-                            .addGap(18, 18, 18)
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPanelSimulacionRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(52, Short.MAX_VALUE))
+                        .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPanelSimulacionRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -526,6 +543,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {                                           
 //GEN-FIRST:event_btnAgregarActionPerformed
+    // TODO add your handling code here:
     try {
         String id = "P" + (modeloTabla.getRowCount() + 1);
         int llegada = Integer.parseInt(tiempoLlegada.getText().trim());
@@ -541,7 +559,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAgregarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-
+    // TODO add your handling code here:
     int totalFilas = modeloTabla.getRowCount();
     if (totalFilas > 0) {
         modeloTabla.removeRow(totalFilas - 1); // Elimina la última fila
@@ -556,6 +574,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     private void simularRunActionPerformed(java.awt.event.ActionEvent evt) {                                           
 //GEN-FIRST:event_simularRunActionPerformed
+    // TODO add your handling code here:
     var procesos = leerProcesosDeTabla();
     if (procesos.isEmpty()) {
         javax.swing.JOptionPane.showMessageDialog(this, "Agrega al menos un proceso.");
@@ -609,7 +628,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_simularRunActionPerformed
 
     private void tipoAlgoritmoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tipoAlgoritmoActionPerformed
-        // TODO add your handling code here:
+    // TODO add your handling code here:
     String seleccionado = String.valueOf(tipoAlgoritmo.getSelectedItem());
 
         if ("RR".equals(seleccionado)) {
@@ -645,6 +664,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonSubirPaguinaActionPerformed
 
     private void jButtonRUNRemplazoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNRemplazoActionPerformed
+    // TODO add your handling code here:       
     String algoritmo = String.valueOf(jComboBoxAlgoritmos.getSelectedItem());
     // Toma la secuencia desde la tabla
     java.util.List<String> referencias = new java.util.ArrayList<>();
@@ -683,7 +703,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             LRUPageReplacement lru = new LRUPageReplacement();
             panelResult = LRUPageReplacement.toFifoResult(lru.simulate(referencias, marcos));
 
-        } else if ("Optimo".equalsIgnoreCase(algoritmo)) {
+        } else if ("Optimal Page Replacement".equalsIgnoreCase(algoritmo)) {
             algoritmoUsado = "Óptimo";
             OptimoPageReplacement opt = new OptimoPageReplacement();
             panelResult = OptimoPageReplacement.toFifoResult(opt.simulate(referencias, marcos));
@@ -706,7 +726,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             panelResult = WorkingSetPageReplacement.toFifoResult(ws.simulate(referencias, marcos, windowSize));
 
         
-        } else if ("VMIN".equalsIgnoreCase(algoritmo)) {
+        } else if ("VMIN(Variable MIN)".equalsIgnoreCase(algoritmo)) {
             algoritmoUsado = "VMIN";
             int horizon = pedirHorizon(this); // método para pedir tamaño de ventana
             VMINPageReplacement vmin = new VMINPageReplacement();
@@ -726,9 +746,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                     "Info", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
-
-        
 
         // Muestra la simulación en el Scroll (resaltado, tooltips, métricas)
         SimulationPanel panel = new SimulationPanel(panelResult);
@@ -753,6 +770,38 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
     }//GEN-LAST:event_jButtonRUNRemplazoActionPerformed
+
+    private void jButtonLimpiarPaguinasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarPaguinasActionPerformed
+        // TODO add your handling code here:
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        model.setRowCount(0); // Elimina todas las filas
+        if (listaPaginas != null) {
+            listaPaginas.clear(); // Limpia la lista interna también
+        }
+        // Opcional: limpiar la simulación y resultados
+        jScrollPanelSimulacionRemplazo.setViewportView(null);
+        resultadosRemplazoArea.setText("");
+
+    }//GEN-LAST:event_jButtonLimpiarPaguinasActionPerformed
+
+    private void jButtonLimpiarTodoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarTodoActionPerformed
+        // TODO add your handling code here:
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+            "¿Seguro que quieres borrar la secuencia, simulación y resultados?",
+            "Confirmar", javax.swing.JOptionPane.YES_NO_OPTION);
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        // Borra la tabla
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        model.setRowCount(0);
+        if (listaPaginas != null) listaPaginas.clear();
+
+        // Borra simulación
+        jScrollPanelSimulacionRemplazo.setViewportView(null);
+
+        // Borra resultados
+        resultadosRemplazoArea.setText("");
+    }
+    }//GEN-LAST:event_jButtonLimpiarTodoActionPerformed
     
 //1)----Algotimos de Planificaion----
 private List<Proceso> leerProcesosDeTabla() {
@@ -866,8 +915,6 @@ private static int pedirUmbral(String mensaje) {
 }
 
 
-
-
     
     /**
      * @param args the command line arguments
@@ -899,6 +946,8 @@ private static int pedirUmbral(String mensaje) {
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField cpuBurst;
+    private javax.swing.JButton jButtonLimpiarPaguinas;
+    private javax.swing.JButton jButtonLimpiarTodo;
     private javax.swing.JButton jButtonRUNRemplazo;
     private javax.swing.JButton jButtonSubirPaguina;
     private javax.swing.JComboBox<String> jComboBoxAlgoritmos;
