@@ -662,7 +662,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 "Atención", javax.swing.JOptionPane.WARNING_MESSAGE);
         return;
     }
-
+    
     // Pide número de marcos
     Integer marcos = pedirNumeroDeMarcos(this);
     if (marcos == null) return; // cancelado
@@ -671,22 +671,64 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         FIFOPageReplacement.Result panelResult; // lo que mostrará SimulationPanel
         String algoritmoUsado;
 
+
+        //MENU DE OPCIONES
         if ("FIFO".equalsIgnoreCase(algoritmo)) {
             algoritmoUsado = "FIFO";
             FIFOPageReplacement fifo = new FIFOPageReplacement();
             panelResult = fifo.simulate(referencias, marcos);
+
         } else if ("LRU".equalsIgnoreCase(algoritmo)) {
             algoritmoUsado = "LRU";
             LRUPageReplacement lru = new LRUPageReplacement();
-            LRUPageReplacement.Result r = lru.simulate(referencias, marcos);
-            // Adaptamos al tipo esperado por SimulationPanel
-            panelResult = LRUPageReplacement.toFifoResult(r);
-        } else {
+            panelResult = LRUPageReplacement.toFifoResult(lru.simulate(referencias, marcos));
+
+        } else if ("Optimo".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "Óptimo";
+            OptimoPageReplacement opt = new OptimoPageReplacement();
+            panelResult = OptimoPageReplacement.toFifoResult(opt.simulate(referencias, marcos));
+
+        } else if ("Clock".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "Clock";
+            ClockPageReplacement clk = new ClockPageReplacement();
+            panelResult = ClockPageReplacement.toFifoResult(clk.simulate(referencias, marcos));
+            
+            
+        } else if ("Second Chance".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "Second Chance";
+            SecondChancePageReplacement sc = new SecondChancePageReplacement();
+            panelResult = SecondChancePageReplacement.toFifoResult(sc.simulate(referencias, marcos));
+        
+        } else if ("Working Set".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "Working Set";
+            int windowSize = pedirWindowSize(this); // método para pedir tamaño de ventana
+            WorkingSetPageReplacement ws = new WorkingSetPageReplacement();
+            panelResult = WorkingSetPageReplacement.toFifoResult(ws.simulate(referencias, marcos, windowSize));
+
+        
+        } else if ("VMIN".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "VMIN";
+            int horizon = pedirHorizon(this); // método para pedir tamaño de ventana
+            VMINPageReplacement vmin = new VMINPageReplacement();
+            panelResult = VMINPageReplacement.toFifoResult(vmin.simulate(referencias, marcos, horizon));
+
+        
+        } else if ("PFF".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "PFF";
+            int upper = pedirUmbral("Umbral superior (p.ej. 2):");
+            int lower = pedirUmbral("Umbral inferior (p.ej. 5):");
+            PFFPageReplacement pff = new PFFPageReplacement();
+            panelResult = PFFPageReplacement.toFifoResult(pff.simulate(referencias, marcos, upper, lower));
+        
+        }else {
             javax.swing.JOptionPane.showMessageDialog(this,
                     "Algoritmo no implementado aún: " + algoritmo,
                     "Info", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+
+
+        
 
         // Muestra la simulación en el Scroll (resaltado, tooltips, métricas)
         SimulationPanel panel = new SimulationPanel(panelResult);
@@ -759,18 +801,69 @@ private static Integer pedirNumeroDeMarcos(java.awt.Component parent) {
         }
     }
 }
-   
 
 
+private static int pedirHorizon(java.awt.Component parent) {
+    while (true) {
+        String input = javax.swing.JOptionPane.showInputDialog(parent,
+                "Tamaño de ventana (horizon) para VMIN (p.ej. 5):",
+                "Configurar VMIN", javax.swing.JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return 5; // valor por defecto si cancelan
+        input = input.trim();
+        if (input.isEmpty()) continue;
+        try {
+            int n = Integer.parseInt(input);
+            if (n > 0 && n <= 50) return n;
+            else javax.swing.JOptionPane.showMessageDialog(parent,
+                    "Ingresa un entero entre 1 y 50.",
+                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(parent,
+                    "Ingresa un entero válido.",
+                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
 
 
+private static int pedirWindowSize(java.awt.Component parent) {
+    while (true) {
+        String input = javax.swing.JOptionPane.showInputDialog(parent,
+                "Tamaño de ventana (Working Set) (p.ej. 4):",
+                "Configurar Working Set", javax.swing.JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return 4; // valor por defecto
+        input = input.trim();
+        if (input.isEmpty()) continue;
+        try {
+            int n = Integer.parseInt(input);
+            if (n > 0 && n <= 50) return n;
+            else javax.swing.JOptionPane.showMessageDialog(parent,
+                    "Ingresa un entero entre 1 y 50.",
+                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(parent,
+                    "Ingresa un entero válido.",
+                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
 
 
-
-
-
-
-
+private static int pedirUmbral(String mensaje) {
+    while (true) {
+        String input = javax.swing.JOptionPane.showInputDialog(null, mensaje, "Configurar PFF", javax.swing.JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return 3; // valor por defecto
+        input = input.trim();
+        if (input.isEmpty()) continue;
+        try {
+            int n = Integer.parseInt(input);
+            if (n > 0 && n <= 50) return n;
+            else javax.swing.JOptionPane.showMessageDialog(null, "Ingresa un entero entre 1 y 50.", "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(null, "Ingresa un entero válido.", "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+        }
+    }
+}
 
 
 
