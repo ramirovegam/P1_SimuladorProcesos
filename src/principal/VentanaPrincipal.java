@@ -30,16 +30,6 @@ import p1.scheduler.Planificador;
 import p1.scheduler.SJF;
 import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
-import p2.ClockAlgorithm;
-import p2.SimulationStep;
-import p2.FIFOAlgorithm;
-import p2.LRUAlgorithm;
-import p2.OptimalAlgorithm;
-import p2.PFFAlgorithm;
-import p2.PageReplacementAlgorithm;
-import p2.SecondChanceAlgorithm;
-import p2.VMINAlgorithm;
-import p2.WorkingSetAlgorithm;
 
 
 
@@ -55,11 +45,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private DefaultTableModel modeloTabla;
     private final GanttPanel gantt = new GanttPanel();
     private SimulationResult ultimoResultado;
-    private List<Integer> listaPaginas;
+    private List<String> listaPaginas;
+    private javax.swing.JTextArea resultadosRemplazoArea;
     
-    /**
-     * Creates new form VentanaPrincipal
-     */
     public VentanaPrincipal() {
         initComponents();
         initCustom();
@@ -68,24 +56,52 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void initCustom() {
+    //----Simulador de planificacion----  
     // Modelo de la JTable
     modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
-
     // Limpia filas nulas generadas por default (si las hay)
     modeloTabla.setRowCount(0);
-
     // Asegura cabeceras correctas
     if (modeloTabla.getColumnCount() < 3) {
         modeloTabla.setColumnCount(3);
     }
     modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
-
     // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
     panelGantt.setLayout(new BorderLayout());
     panelGantt.add(gantt, BorderLayout.CENTER);
     panelGantt.revalidate();
     panelGantt.repaint();
     
+    //---Simulador de Remplazo Paguinas---
+    // === Inicializa la tabla de Paguinas (letras) ===
+    javax.swing.table.DefaultTableModel modeloPaguinas = new javax.swing.table.DefaultTableModel(
+            new Object[]{"Paguina"}, 0
+    );
+    jTablePaguinas.setModel(modeloPaguinas);
+
+    // (Opcional) ancho amigable
+    jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
+    
+        // Resultados de reemplazo
+    jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
+    jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
+    jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
+
+    resultadosRemplazoArea = new javax.swing.JTextArea();
+    resultadosRemplazoArea.setEditable(false);
+    resultadosRemplazoArea.setLineWrap(true);
+    resultadosRemplazoArea.setWrapStyleWord(true);
+    resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
+    resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
+    resultadosRemplazoArea.setColumns(50);
+    resultadosRemplazoArea.setRows(6);
+
+    javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
+    resultadosScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    resultadosScroll.getViewport().addChangeListener(e ->
+            resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
+    );
+    jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -133,9 +149,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jTablePaguinas = new javax.swing.JTable();
         Paguinas = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
-        jPanelTablaPasoaPaso = new javax.swing.JPanel();
         jPanelResultadosRemplazo = new javax.swing.JPanel();
         jLabel12 = new javax.swing.JLabel();
+        jScrollPanelSimulacionRemplazo = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -352,9 +368,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
+        jLabel9.setForeground(new java.awt.Color(0, 0, 0));
         jLabel9.setText("Algoritmo");
 
-        jButtonSubirPaguina.setText("agregar paguina");
+        jButtonSubirPaguina.setForeground(new java.awt.Color(0, 0, 0));
+        jButtonSubirPaguina.setText("Agregar Paguina");
         jButtonSubirPaguina.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonSubirPaguinaActionPerformed(evt);
@@ -370,9 +388,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
-        jComboBoxPaguina.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+        jComboBoxPaguina.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jComboBoxPaguina.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "A", "B", "C", "D", "E" }));
+        jComboBoxPaguina.setToolTipText("");
 
-        jLabel13.setText("Paguina");
+        jLabel13.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel13.setText("Paguinas");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -380,14 +401,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(16, 16, 16)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(34, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -424,19 +444,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setText("Simulacion");
 
-        jPanelTablaPasoaPaso.setEnabled(false);
-
-        javax.swing.GroupLayout jPanelTablaPasoaPasoLayout = new javax.swing.GroupLayout(jPanelTablaPasoaPaso);
-        jPanelTablaPasoaPaso.setLayout(jPanelTablaPasoaPasoLayout);
-        jPanelTablaPasoaPasoLayout.setHorizontalGroup(
-            jPanelTablaPasoaPasoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanelTablaPasoaPasoLayout.setVerticalGroup(
-            jPanelTablaPasoaPasoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 155, Short.MAX_VALUE)
-        );
-
         javax.swing.GroupLayout jPanelResultadosRemplazoLayout = new javax.swing.GroupLayout(jPanelResultadosRemplazo);
         jPanelResultadosRemplazo.setLayout(jPanelResultadosRemplazoLayout);
         jPanelResultadosRemplazoLayout.setHorizontalGroup(
@@ -445,7 +452,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         );
         jPanelResultadosRemplazoLayout.setVerticalGroup(
             jPanelResultadosRemplazoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 163, Short.MAX_VALUE)
+            .addGap(0, 115, Short.MAX_VALUE)
         );
 
         jLabel12.setForeground(new java.awt.Color(255, 255, 255));
@@ -458,19 +465,23 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(26, 26, 26)
-                        .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 602, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel4Layout.createSequentialGroup()
+                            .addGap(26, 26, 26)
+                            .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel4Layout.createSequentialGroup()
+                            .addGap(18, 18, 18)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jPanelTablaPasoaPaso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPanelSimulacionRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(52, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -479,16 +490,16 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(Paguinas)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel11)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanelTablaPasoaPaso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(31, 31, 31)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPanelSimulacionRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel12)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(109, Short.MAX_VALUE))
+                .addGap(15, 15, 15))
         );
 
         jTabbedPane4.addTab("Algoritmos de reemplazo de pagina", jPanel4);
@@ -499,7 +510,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE)
+                .addComponent(jTabbedPane4)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -527,7 +538,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     } catch (NumberFormatException ex) {
         javax.swing.JOptionPane.showMessageDialog(this, "Ingresa números válidos en Llegada y Ráfaga.");
     }
-
     }//GEN-LAST:event_btnAgregarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
@@ -542,11 +552,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     } else {
         JOptionPane.showMessageDialog(this, "No hay procesos para eliminar.");
     }
-
     }//GEN-LAST:event_btnEliminarActionPerformed
 
     private void simularRunActionPerformed(java.awt.event.ActionEvent evt) {                                           
-
 //GEN-FIRST:event_simularRunActionPerformed
     var procesos = leerProcesosDeTabla();
     if (procesos.isEmpty()) {
@@ -626,112 +634,85 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jComboBoxAlgoritmosActionPerformed
 
     private void jButtonSubirPaguinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSubirPaguinaActionPerformed
-        
-  String seleccion = (String) jComboBoxPaguina.getSelectedItem();
+        String page = (String) jComboBoxPaguina.getSelectedItem();
+        if (page == null || page.isBlank()) return;
 
-    if (seleccion != null && !seleccion.isEmpty()) {
-        try {
-            int paginaSeleccionada = Integer.parseInt(seleccion);
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        model.addRow(new Object[]{page});
 
-            // Inicializar lista si está vacía
-            if (listaPaginas == null) {
-                listaPaginas = new ArrayList<>();
-            }
-
-            // Agregar página a la lista
-            listaPaginas.add(paginaSeleccionada);
-
-            // Crear modelo horizontal: una fila, columnas = páginas
-            DefaultTableModel model = new DefaultTableModel(1, listaPaginas.size());
-            String[] columnas = listaPaginas.stream()
-                                            .map(String::valueOf)
-                                            .toArray(String[]::new);
-            model.setColumnIdentifiers(columnas);
-            model.setValueAt("", 0, 0); // fila vacía
-            jTablePaguinas.setModel(model);
-
-            // Ajustar tamaño para evitar espacio gris
-            jTablePaguinas.setRowHeight(35);
-            jTablePaguinas.setPreferredScrollableViewportSize(
-                new Dimension(jTablePaguinas.getPreferredSize().width, 40)
-            );
-            jScrollPane2.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), 50));
-
-            // Renderer para encabezados en azul
-            jTablePaguinas.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value,
-                        boolean isSelected, boolean hasFocus, int row, int column) {
-                    JLabel header = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                    header.setForeground(Color.BLUE);
-                    header.setFont(new Font("Arial", Font.BOLD, 14));
-                    header.setHorizontalAlignment(SwingConstants.CENTER);
-                    return header;
-                }
-            });
-
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Error: valor no numérico.");
-        }
-    } else {
-        JOptionPane.showMessageDialog(this, "Selecciona una página válida.");
-    }
+        if (listaPaginas == null) listaPaginas = new java.util.ArrayList<>();
+        listaPaginas.add(page.substring(0, 1).toUpperCase());
     }//GEN-LAST:event_jButtonSubirPaguinaActionPerformed
 
     private void jButtonRUNRemplazoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNRemplazoActionPerformed
-    
+    String algoritmo = String.valueOf(jComboBoxAlgoritmos.getSelectedItem());
+    // Toma la secuencia desde la tabla
+    java.util.List<String> referencias = new java.util.ArrayList<>();
+    javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+    for (int i = 0; i < model.getRowCount(); i++) {
+        Object val = model.getValueAt(i, 0);
+        if (val != null) {
+            String s = val.toString().trim();
+            if (!s.isEmpty()) referencias.add(s.substring(0, 1).toUpperCase());
+        }
+    }
+    if (referencias.isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Agrega al menos una Paguina (usa 'Agregar Paguina').",
+                "Atención", javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // Pide número de marcos
+    Integer marcos = pedirNumeroDeMarcos(this);
+    if (marcos == null) return; // cancelado
+
     try {
-        // Pedir número de marcos
-        String input = JOptionPane.showInputDialog(this, "Ingrese el número de marcos:", "Configuración", JOptionPane.QUESTION_MESSAGE);
-        if (input == null || input.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar un valor.");
+        FIFOPageReplacement.Result panelResult; // lo que mostrará SimulationPanel
+        String algoritmoUsado;
+
+        if ("FIFO".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "FIFO";
+            FIFOPageReplacement fifo = new FIFOPageReplacement();
+            panelResult = fifo.simulate(referencias, marcos);
+        } else if ("LRU".equalsIgnoreCase(algoritmo)) {
+            algoritmoUsado = "LRU";
+            LRUPageReplacement lru = new LRUPageReplacement();
+            LRUPageReplacement.Result r = lru.simulate(referencias, marcos);
+            // Adaptamos al tipo esperado por SimulationPanel
+            panelResult = LRUPageReplacement.toFifoResult(r);
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Algoritmo no implementado aún: " + algoritmo,
+                    "Info", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        int frames = Integer.parseInt(input);
 
-        // Obtener algoritmo seleccionado
-        String algoritmoSeleccionado = (String) jComboBoxAlgoritmos.getSelectedItem();
-        PageReplacementAlgorithm algoritmo;
+        // Muestra la simulación en el Scroll (resaltado, tooltips, métricas)
+        SimulationPanel panel = new SimulationPanel(panelResult);
+        jScrollPanelSimulacionRemplazo.setViewportView(panel);
+        jScrollPanelSimulacionRemplazo.revalidate();
+        jScrollPanelSimulacionRemplazo.repaint();
 
-    switch (algoritmoSeleccionado) {
-        case "FIFO": algoritmo = new FIFOAlgorithm(frames); break;
-        case "Optimo": algoritmo = new OptimalAlgorithm(frames, listaPaginas); break;
-        case "LRU": algoritmo = new LRUAlgorithm(frames); break;
-        case "Clock":algoritmo = new ClockAlgorithm(frames);break;
-        case "Second Chance": algoritmo = new SecondChanceAlgorithm(frames);break;
-        case "VMIN": int windowSize = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese tamaño de ventana:", "Configuración", JOptionPane.QUESTION_MESSAGE));algoritmo = new VMINAlgorithm(frames, listaPaginas, windowSize);break;
-        case "Working Set": int delta = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese tamaño de ventana (Δ):", "Configuración", JOptionPane.QUESTION_MESSAGE)); algoritmo = new WorkingSetAlgorithm(frames, delta);break;
-        case "PFF":
-        int initialFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos iniciales:"));
-        int minFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos mínimos:"));
-        int maxFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos máximos:"));
-        double lowerThreshold = Double.parseDouble(JOptionPane.showInputDialog(this, "Ingrese umbral inferior (ej. 0.2):"));
-        double upperThreshold = Double.parseDouble(JOptionPane.showInputDialog(this, "Ingrese umbral superior (ej. 0.5):"));
-        algoritmo = new PFFAlgorithm(initialFrames, minFrames, maxFrames, lowerThreshold, upperThreshold);
-        break;
-        
-        
-        default: JOptionPane.showMessageDialog(this, "Selecciona un algoritmo válido."); return;
-    }
-        // Ejecutar simulación
-            p2.SimulatorController controller = new p2.SimulatorController();
-        List<p2.SimulationStep> pasos = controller.runSimulation(listaPaginas, algoritmo);
+        // === Panel de resultados (texto) ===
+        String finalFramesString = FIFOPageReplacement.Result.formatFrames(panelResult.finalFrames());
+        String seq = String.join(", ", referencias);
+        String resumen = String.format(
+                "Algoritmo: %s%nSecuencia: %s%nMarcos: %d%n%nResultado final: %s%nFallas: %d%nHits: %d%nTasa de fallas: %.2f%%",
+                algoritmoUsado, seq, marcos, finalFramesString, panelResult.totalFaults, panelResult.totalHits,
+                (panelResult.totalFaults * 100.0) / Math.max(1, (panelResult.totalFaults + panelResult.totalHits))
+        );
+        resultadosRemplazoArea.setText(resumen);
 
-        // Mostrar resultados en la tabla y panel
-        mostrarResultados(pasos, frames, algoritmo.getPageFaults());
-
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this, "Número inválido.");
     } catch (Exception ex) {
-        JOptionPane.showMessageDialog(this, "Error al ejecutar la simulación: " + ex.getMessage());
+        ex.printStackTrace();
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Error en la simulación: " + ex.getMessage(),
+                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
-        
-        
-        
-        
     }//GEN-LAST:event_jButtonRUNRemplazoActionPerformed
     
-    
+//1)----Algotimos de Planificaion----
 private List<Proceso> leerProcesosDeTabla() {
     List<Proceso> lista = new ArrayList<>();
     for (int i = 0; i < modeloTabla.getRowCount(); i++) {
@@ -753,110 +734,47 @@ private Planificador crearPlanificador() {
         default: return new FCFS();
     }
 }
-//=====Mostrar resultado========================================
-    private void mostrarResultados(List<SimulationStep> pasos, int frames, int pageFaults) {
-    DefaultTableModel model = new DefaultTableModel();
-
-    // Columnas = páginas
-    for (SimulationStep step : pasos) {
-        model.addColumn(String.valueOf(step.getPage()));
-    }
-
-    // Filas = marcos
-    for (int i = 0; i < frames; i++) {
-        model.addRow(new Object[pasos.size()]);
-    }
-
-    // Inicializar matriz con "-"
-    for (int row = 0; row < frames; row++) {
-        for (int col = 0; col < pasos.size(); col++) {
-            model.setValueAt("-", row, col);
-        }
-    }
-
-    // Llenar la tabla paso a paso
-    List<Integer[]> previousState = new ArrayList<>();
-    for (int i = 0; i < frames; i++) {
-        previousState.add(new Integer[pasos.size()]);
-    }
-
-    for (int col = 0; col < pasos.size(); col++) {
-        List<Integer> estado = pasos.get(col).getMemoryState();
-        Integer replacedIndex = pasos.get(col).getReplacedIndex();
-
-        for (int row = 0; row < frames; row++) {
-            String valor = (estado.get(row) != null) ? String.valueOf(estado.get(row)) : "-";
-
-            // Si no cambió respecto al paso anterior, deja el valor anterior
-            if (col > 0 && previousState.get(row)[col - 1] != null && previousState.get(row)[col - 1].equals(estado.get(row))) {
-                valor = String.valueOf(previousState.get(row)[col - 1]);
-            }
-
-            // Guardar estado actual
-            previousState.get(row)[col] = estado.get(row);
-
-            // Marcar reemplazo
-            if (replacedIndex != null && row == replacedIndex) {
-                valor += "*";
-            }
-
-            model.setValueAt(valor, row, col);
-        }
-    }
-
-    JTable tabla = new JTable(model);
-    tabla.setRowHeight(35);
-
-    // Renderer para colorear reemplazos
-    tabla.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            String val = (value != null) ? value.toString() : "";
-            if (val.endsWith("*")) {
-                c.setBackground(Color.RED);
-                c.setForeground(Color.WHITE);
-                setText(val.replace("*", ""));
+//2)----Algotimos de remplazo----
+private static Integer pedirNumeroDeMarcos(java.awt.Component parent) {
+    while (true) {
+        String input = javax.swing.JOptionPane.showInputDialog(parent,
+                "Número de marcos (p. ej. 3):",
+                "Configurar marcos", javax.swing.JOptionPane.QUESTION_MESSAGE);
+        if (input == null) return null; // cancelado
+        input = input.trim();
+        if (input.isEmpty()) continue;
+        try {
+            int n = Integer.parseInt(input);
+            if (n > 0 && n <= 20) {
+                return n;
             } else {
-                c.setBackground(Color.WHITE);
-                c.setForeground(Color.BLACK);
+                javax.swing.JOptionPane.showMessageDialog(parent,
+                        "Ingresa un entero entre 1 y 20.",
+                        "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
             }
-            setHorizontalAlignment(SwingConstants.CENTER);
-            return c;
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(parent,
+                    "Ingresa un entero válido.",
+                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
         }
-    });
-
-    JScrollPane scroll = new JScrollPane(tabla);
-    scroll.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), frames * 40));
-    jPanelTablaPasoaPaso.removeAll();
-    jPanelTablaPasoaPaso.setLayout(new BorderLayout());
-    jPanelTablaPasoaPaso.add(scroll, BorderLayout.CENTER);
-    jPanelTablaPasoaPaso.revalidate();
-    jPanelTablaPasoaPaso.repaint();
-
-    // Mostrar métricas
-    int total = pasos.size();
-    int aciertos = total - pageFaults;
-    double tasa = (aciertos * 100.0) / total;
-    jPanelResultadosRemplazo.removeAll();
-    jPanelResultadosRemplazo.setLayout(new GridLayout(3, 1));
-    jPanelResultadosRemplazo.setPreferredSize(new Dimension(jPanelTablaPasoaPaso.getWidth(), 100));
-    JLabel lblAciertos = new JLabel("Número de aciertos: " + aciertos);
-    lblAciertos.setForeground(Color.GREEN);
-    lblAciertos.setFont(new Font("Arial", Font.BOLD, 14));
-    JLabel lblFallos = new JLabel("Fallos de página: " + pageFaults);
-    lblFallos.setForeground(Color.RED);
-    lblFallos.setFont(new Font("Arial", Font.BOLD, 14));
-    JLabel lblTasa = new JLabel(String.format("Tasa de acierto: %.2f%%", tasa));
-    lblTasa.setFont(new Font("Arial", Font.BOLD, 14));
-    jPanelResultadosRemplazo.add(lblAciertos);
-    jPanelResultadosRemplazo.add(lblFallos);
-    jPanelResultadosRemplazo.add(lblTasa);
-    jPanelResultadosRemplazo.revalidate();
-    jPanelResultadosRemplazo.repaint();
+    }
 }
-//=====Mostrar resultado Fin=====================================
-    
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /**
      * @param args the command line arguments
@@ -909,11 +827,11 @@ private Planificador crearPlanificador() {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanelResultadosRemplazo;
-    private javax.swing.JPanel jPanelTablaPasoaPaso;
     private javax.swing.JButton jRepetir;
     private javax.swing.JScrollPane jScrollPane;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPanelSimulacionRemplazo;
     private javax.swing.JTabbedPane jTabbedPane4;
     private javax.swing.JTable jTablePaguinas;
     private javax.swing.JPanel panelGantt;
@@ -925,6 +843,4 @@ private Planificador crearPlanificador() {
     private javax.swing.JTextField tiempoLlegada;
     private javax.swing.JComboBox<String> tipoAlgoritmo;
     // End of variables declaration//GEN-END:variables
-
-
 }
