@@ -24,7 +24,18 @@ public class SimulatorController {
                 replacedIndex = ((p2.OptimalAlgorithm) algorithm).getLastReplacedIndex();
             } else if (algorithm instanceof p2.LRUAlgorithm) {
             replacedIndex = ((p2.LRUAlgorithm) algorithm).getLastReplacedIndex();
-            }
+            }else if (algorithm instanceof p2.ClockAlgorithm) {
+            replacedIndex = ((p2.ClockAlgorithm) algorithm).getLastReplacedIndex();
+           }else if (algorithm instanceof p2.VMINAlgorithm) {
+            replacedIndex = ((p2.VMINAlgorithm) algorithm).getLastReplacedIndex();
+            }else if (algorithm instanceof p2.WorkingSetAlgorithm) {
+            replacedIndex = ((p2.WorkingSetAlgorithm) algorithm).getLastReplacedIndex();
+            }else if (algorithm instanceof p2.PFFAlgorithm) {
+            replacedIndex = ((p2.PFFAlgorithm) algorithm).getLastReplacedIndex();
+            }else if (algorithm instanceof p2.SecondChanceAlgorithm) {
+            replacedIndex = ((p2.SecondChanceAlgorithm) algorithm).getLastReplacedIndex();
+            
+}
 
             // Crear el paso de simulación
             steps.add(new SimulationStep(page, algorithm.getMemoryState(), faultOccurred, replacedIndex));

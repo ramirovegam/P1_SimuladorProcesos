@@ -30,11 +30,16 @@ import p1.scheduler.Planificador;
 import p1.scheduler.SJF;
 import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
+import p2.ClockAlgorithm;
 import p2.SimulationStep;
 import p2.FIFOAlgorithm;
 import p2.LRUAlgorithm;
 import p2.OptimalAlgorithm;
+import p2.PFFAlgorithm;
 import p2.PageReplacementAlgorithm;
+import p2.SecondChanceAlgorithm;
+import p2.VMINAlgorithm;
+import p2.WorkingSetAlgorithm;
 
 
 
@@ -340,7 +345,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
-        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Optimo", "LRU" }));
+        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Optimo", "LRU", "Clock", "Second Chance", "VMIN", "Working Set", "PFF" }));
         jComboBoxAlgoritmos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxAlgoritmosActionPerformed(evt);
@@ -349,7 +354,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jLabel9.setText("Algoritmo");
 
-        jButtonSubirPaguina.setText("Subir paguina");
+        jButtonSubirPaguina.setText("agregar paguina");
         jButtonSubirPaguina.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonSubirPaguinaActionPerformed(evt);
@@ -365,7 +370,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
-        jComboBoxPaguina.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" }));
+        jComboBoxPaguina.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
 
         jLabel13.setText("Paguina");
 
@@ -380,7 +385,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, 125, Short.MAX_VALUE)
+                        .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(34, Short.MAX_VALUE))
@@ -465,7 +470,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                 .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jPanelTablaPasoaPaso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(25, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -494,7 +499,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane4)
+                .addComponent(jTabbedPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -692,6 +697,20 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         case "FIFO": algoritmo = new FIFOAlgorithm(frames); break;
         case "Optimo": algoritmo = new OptimalAlgorithm(frames, listaPaginas); break;
         case "LRU": algoritmo = new LRUAlgorithm(frames); break;
+        case "Clock":algoritmo = new ClockAlgorithm(frames);break;
+        case "Second Chance": algoritmo = new SecondChanceAlgorithm(frames);break;
+        case "VMIN": int windowSize = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese tamaño de ventana:", "Configuración", JOptionPane.QUESTION_MESSAGE));algoritmo = new VMINAlgorithm(frames, listaPaginas, windowSize);break;
+        case "Working Set": int delta = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese tamaño de ventana (Δ):", "Configuración", JOptionPane.QUESTION_MESSAGE)); algoritmo = new WorkingSetAlgorithm(frames, delta);break;
+        case "PFF":
+        int initialFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos iniciales:"));
+        int minFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos mínimos:"));
+        int maxFrames = Integer.parseInt(JOptionPane.showInputDialog(this, "Ingrese marcos máximos:"));
+        double lowerThreshold = Double.parseDouble(JOptionPane.showInputDialog(this, "Ingrese umbral inferior (ej. 0.2):"));
+        double upperThreshold = Double.parseDouble(JOptionPane.showInputDialog(this, "Ingrese umbral superior (ej. 0.5):"));
+        algoritmo = new PFFAlgorithm(initialFrames, minFrames, maxFrames, lowerThreshold, upperThreshold);
+        break;
+        
+        
         default: JOptionPane.showMessageDialog(this, "Selecciona un algoritmo válido."); return;
     }
         // Ejecutar simulación
