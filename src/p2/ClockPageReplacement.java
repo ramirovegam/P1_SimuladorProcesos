@@ -75,7 +75,6 @@ public class ClockPageReplacement {
 
         for (int i = 0; i < references.size(); i++) {
             String page = normalize(references.get(i));
-            String label = "Paso " + (i + 1) + ": entra " + page;
             boolean fault;
             int changedIndex = -1;
 
@@ -114,6 +113,9 @@ public class ClockPageReplacement {
                     }
                 }
             }
+             // ✅ construimos el label con la info correcta
+            String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
+            labels.add(label);
 
             shots.add(copy(frames));
             labels.add(label);

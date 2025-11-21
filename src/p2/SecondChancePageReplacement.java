@@ -68,7 +68,6 @@ public class SecondChancePageReplacement {
 
         for (int i = 0; i < references.size(); i++) {
             String page = normalize(references.get(i));
-            String label = "Paso " + (i + 1) + ": entra " + page;
             boolean fault;
             int changedIndex = -1;
 
@@ -107,7 +106,8 @@ public class SecondChancePageReplacement {
                     }
                 }
             }
-
+            // Ahora construimos el label con la info correct
+            String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
             shots.add(copy(frames));
             labels.add(label);
             faultsPerRow.add(fault);

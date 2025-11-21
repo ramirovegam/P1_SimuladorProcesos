@@ -74,7 +74,6 @@ public class LRUPageReplacement {
         for (int i = 0; i < references.size(); i++) {
             int stepTime = i + 1; // tiempo lógico de este paso
             String page = normalize(references.get(i));
-            String label = "Paso " + (i + 1) + ": entra " + page;
 
             int idx = indexOf(frames, page);
             boolean fault;
@@ -102,7 +101,8 @@ public class LRUPageReplacement {
                     changedIndex = victim;
                 }
             }
-
+            // Ahora construimos el label con la info correct
+            String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
             shots.add(copy(frames));
             labels.add(label);
             faultsPerRow.add(fault);

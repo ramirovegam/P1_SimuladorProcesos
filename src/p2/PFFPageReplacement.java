@@ -68,7 +68,6 @@ public class PFFPageReplacement {
         for (int i = 0; i < references.size(); i++) {
             timeSinceLastFault++;
             String page = normalize(references.get(i));
-            String label = "Paso " + (i + 1) + ": entra " + page;
             boolean fault;
             int changedIndex = -1;
 
@@ -106,7 +105,8 @@ public class PFFPageReplacement {
                 // Ajustar la cola si se reduce
                 while (fifoQueue.size() > frameCount) fifoQueue.poll();
             }
-
+            // Ahora construimos el label con la info correct
+            String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
             shots.add(copy(frames));
             labels.add(label);
             faultsPerRow.add(fault);
