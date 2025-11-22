@@ -142,7 +142,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jButtonRUNRemplazo = new javax.swing.JButton();
         jComboBoxPaguina = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
-        jButtonLimpiarPaguinas = new javax.swing.JButton();
         jButtonLimpiarTodo = new javax.swing.JButton();
         jButtonInfoAlgorimo = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -152,6 +151,14 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanelResultadosRemplazo = new javax.swing.JPanel();
         jLabel12 = new javax.swing.JLabel();
         jScrollPanelSimulacionRemplazo = new javax.swing.JScrollPane();
+        jPanel5 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextAreaConsola = new javax.swing.JTextArea();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTreeArbol = new javax.swing.JTree();
+        jTextFieldEntrada = new javax.swing.JTextField();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel10 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -371,7 +378,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel9.setForeground(new java.awt.Color(0, 0, 0));
         jLabel9.setText("Algoritmo");
 
-        jButtonSubirPaguina.setForeground(new java.awt.Color(0, 0, 0));
+        jButtonSubirPaguina.setBackground(new java.awt.Color(255, 0, 102));
+        jButtonSubirPaguina.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jButtonSubirPaguina.setForeground(new java.awt.Color(255, 255, 255));
         jButtonSubirPaguina.setText("Agregar Paguina");
         jButtonSubirPaguina.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -380,6 +389,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         });
 
         jButtonRUNRemplazo.setBackground(new java.awt.Color(0, 0, 0));
+        jButtonRUNRemplazo.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jButtonRUNRemplazo.setForeground(new java.awt.Color(255, 255, 255));
         jButtonRUNRemplazo.setText("RUN");
         jButtonRUNRemplazo.addActionListener(new java.awt.event.ActionListener() {
@@ -394,15 +404,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jLabel13.setForeground(new java.awt.Color(0, 0, 0));
         jLabel13.setText("Paguinas");
-
-        jButtonLimpiarPaguinas.setBackground(new java.awt.Color(255, 0, 51));
-        jButtonLimpiarPaguinas.setForeground(new java.awt.Color(255, 255, 255));
-        jButtonLimpiarPaguinas.setText("Limpiar Secuencia");
-        jButtonLimpiarPaguinas.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonLimpiarPaguinasActionPerformed(evt);
-            }
-        });
 
         jButtonLimpiarTodo.setText("🗑️ Limpiar Todo ");
         jButtonLimpiarTodo.addActionListener(new java.awt.event.ActionListener() {
@@ -435,7 +436,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                             .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButtonLimpiarPaguinas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jComboBoxPaguina, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addContainerGap()
@@ -457,8 +457,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButtonSubirPaguina)
-                .addGap(12, 12, 12)
-                .addComponent(jButtonLimpiarPaguinas)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButtonRUNRemplazo)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -535,6 +533,74 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         );
 
         jTabbedPane4.addTab("Algoritmos de reemplazo de pagina", jPanel4);
+
+        jPanel5.setBackground(new java.awt.Color(0, 0, 0));
+        jPanel5.setForeground(new java.awt.Color(51, 51, 51));
+
+        jTextAreaConsola.setBackground(new java.awt.Color(0, 0, 0));
+        jTextAreaConsola.setColumns(20);
+        jTextAreaConsola.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jTextAreaConsola.setForeground(new java.awt.Color(153, 255, 102));
+        jTextAreaConsola.setRows(5);
+        jTextAreaConsola.setText("Consola principal");
+        jTextAreaConsola.setEnabled(false);
+        jScrollPane3.setViewportView(jTextAreaConsola);
+
+        jTreeArbol.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jScrollPane4.setViewportView(jTreeArbol);
+
+        jTextFieldEntrada.setText("Entrada");
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 173, Short.MAX_VALUE)
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
+        jLabel10.setBackground(new java.awt.Color(102, 204, 255));
+        jLabel10.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(153, 204, 255));
+        jLabel10.setText("Directorio actual:");
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(16, 16, 16)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 521, Short.MAX_VALUE)
+                            .addComponent(jTextFieldEntrada))
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(65, 65, 65)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
+                .addGap(26, 26, 26)
+                .addComponent(jTextFieldEntrada, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(28, 28, 28)
+                .addComponent(jLabel10)
+                .addContainerGap(52, Short.MAX_VALUE))
+        );
+
+        jTabbedPane4.addTab("sistema de archivo", jPanel5);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -827,19 +893,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
 
     }//GEN-LAST:event_jButtonRUNRemplazoActionPerformed
-
-    private void jButtonLimpiarPaguinasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarPaguinasActionPerformed
-        // TODO add your handling code here:
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
-        model.setRowCount(0); // Elimina todas las filas
-        if (listaPaginas != null) {
-            listaPaginas.clear(); // Limpia la lista interna también
-        }
-        // Opcional: limpiar la simulación y resultados
-        jScrollPanelSimulacionRemplazo.setViewportView(null);
-        resultadosRemplazoArea.setText("");
-
-    }//GEN-LAST:event_jButtonLimpiarPaguinasActionPerformed
 
     private void jButtonLimpiarTodoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarTodoActionPerformed
         // TODO add your handling code here:
@@ -1148,13 +1201,13 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField cpuBurst;
     private javax.swing.JButton jButtonInfoAlgorimo;
-    private javax.swing.JButton jButtonLimpiarPaguinas;
     private javax.swing.JButton jButtonLimpiarTodo;
     private javax.swing.JButton jButtonRUNRemplazo;
     private javax.swing.JButton jButtonSubirPaguina;
     private javax.swing.JComboBox<String> jComboBoxAlgoritmos;
     private javax.swing.JComboBox<String> jComboBoxPaguina;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
@@ -1170,14 +1223,21 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanelResultadosRemplazo;
     private javax.swing.JButton jRepetir;
     private javax.swing.JScrollPane jScrollPane;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPanelSimulacionRemplazo;
     private javax.swing.JTabbedPane jTabbedPane4;
     private javax.swing.JTable jTablePaguinas;
+    private javax.swing.JTextArea jTextAreaConsola;
+    private javax.swing.JTextField jTextFieldEntrada;
+    private javax.swing.JTree jTreeArbol;
     private javax.swing.JPanel panelGantt;
     private javax.swing.JTextField quantum;
     private javax.swing.JLabel quantumActual;
