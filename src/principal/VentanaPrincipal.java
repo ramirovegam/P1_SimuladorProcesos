@@ -1,4 +1,3 @@
-
 package principal;
 
 import java.awt.BorderLayout;
@@ -20,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -31,23 +31,19 @@ import p1.scheduler.SJF;
 import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
 
-
-
 /**
  *
  * @author RVega
  */
-
-
 public class VentanaPrincipal extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName());
     private DefaultTableModel modeloTabla;
     private final GanttPanel gantt = new GanttPanel();
     private SimulationResult ultimoResultado;
     private List<String> listaPaginas;
     private javax.swing.JTextArea resultadosRemplazoArea;
-    
+
     public VentanaPrincipal() {
         initComponents();
         initCustom();
@@ -56,53 +52,54 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void initCustom() {
-    //----Simulador de planificacion----  
-    // Modelo de la JTable
-    modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
-    // Limpia filas nulas generadas por default (si las hay)
-    modeloTabla.setRowCount(0);
-    // Asegura cabeceras correctas
-    if (modeloTabla.getColumnCount() < 3) {
-        modeloTabla.setColumnCount(3);
-    }
-    modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
-    // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
-    panelGantt.setLayout(new BorderLayout());
-    panelGantt.add(gantt, BorderLayout.CENTER);
-    panelGantt.revalidate();
-    panelGantt.repaint();
-    
-    //---Simulador de Remplazo Paguinas---
-    // === Inicializa la tabla de Paguinas (letras) ===
-    javax.swing.table.DefaultTableModel modeloPaguinas = new javax.swing.table.DefaultTableModel(
-            new Object[]{"Paguina"}, 0
-    );
-    jTablePaguinas.setModel(modeloPaguinas);
+        //----Simulador de planificacion----  
+        // Modelo de la JTable
+        modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
+        // Limpia filas nulas generadas por default (si las hay)
+        modeloTabla.setRowCount(0);
+        // Asegura cabeceras correctas
+        if (modeloTabla.getColumnCount() < 3) {
+            modeloTabla.setColumnCount(3);
+        }
+        modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
+        // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
+        panelGantt.setLayout(new BorderLayout());
+        panelGantt.add(gantt, BorderLayout.CENTER);
+        panelGantt.revalidate();
+        panelGantt.repaint();
 
-    // (Opcional) ancho amigable
-    jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
-    
+        //---Simulador de Remplazo Paguinas---
+        // === Inicializa la tabla de Paguinas (letras) ===
+        javax.swing.table.DefaultTableModel modeloPaguinas = new javax.swing.table.DefaultTableModel(
+                new Object[]{"Paguina"}, 0
+        );
+        jTablePaguinas.setModel(modeloPaguinas);
+
+        // (Opcional) ancho amigable
+        jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
+
         // Resultados de reemplazo
-    jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
-    jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
-    jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
+        jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
+        jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
+        jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
 
-    resultadosRemplazoArea = new javax.swing.JTextArea();
-    resultadosRemplazoArea.setEditable(false);
-    resultadosRemplazoArea.setLineWrap(true);
-    resultadosRemplazoArea.setWrapStyleWord(true);
-    resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
-    resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
-    resultadosRemplazoArea.setColumns(50);
-    resultadosRemplazoArea.setRows(6);
+        resultadosRemplazoArea = new javax.swing.JTextArea();
+        resultadosRemplazoArea.setEditable(false);
+        resultadosRemplazoArea.setLineWrap(true);
+        resultadosRemplazoArea.setWrapStyleWord(true);
+        resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
+        resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
+        resultadosRemplazoArea.setColumns(50);
+        resultadosRemplazoArea.setRows(6);
 
-    javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
-    resultadosScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-    resultadosScroll.getViewport().addChangeListener(e ->
-            resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
-    );
-    jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
+        javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
+        resultadosScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        resultadosScroll.getViewport().addChangeListener(e
+                -> resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
+        );
+        jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -145,6 +142,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jButtonRUNRemplazo = new javax.swing.JButton();
         jComboBoxPaguina = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
+        jButtonLimpiarPaguinas = new javax.swing.JButton();
+        jButtonLimpiarTodo = new javax.swing.JButton();
+        jButtonInfoAlgorimo = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTablePaguinas = new javax.swing.JTable();
         Paguinas = new javax.swing.JLabel();
@@ -361,7 +361,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
-        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Optimo", "LRU", "Clock", "Second Chance", "VMIN", "Working Set", "PFF" }));
+        jComboBoxAlgoritmos.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "LRU", "Optimal Page Replacement", "Clock", "Second Chance", "VMIN(Variable MIN)", "Working Set", "PFF" }));
         jComboBoxAlgoritmos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxAlgoritmosActionPerformed(evt);
@@ -395,20 +395,54 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel13.setForeground(new java.awt.Color(0, 0, 0));
         jLabel13.setText("Paguinas");
 
+        jButtonLimpiarPaguinas.setBackground(new java.awt.Color(255, 0, 51));
+        jButtonLimpiarPaguinas.setForeground(new java.awt.Color(255, 255, 255));
+        jButtonLimpiarPaguinas.setText("Limpiar Secuencia");
+        jButtonLimpiarPaguinas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLimpiarPaguinasActionPerformed(evt);
+            }
+        });
+
+        jButtonLimpiarTodo.setText("🗑️ Limpiar Todo ");
+        jButtonLimpiarTodo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLimpiarTodoActionPerformed(evt);
+            }
+        });
+
+        jButtonInfoAlgorimo.setBackground(new java.awt.Color(0, 102, 255));
+        jButtonInfoAlgorimo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButtonInfoAlgorimo.setForeground(new java.awt.Color(255, 255, 255));
+        jButtonInfoAlgorimo.setText("i");
+        jButtonInfoAlgorimo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonInfoAlgorimoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(16, 16, 16)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(16, 16, 16)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jComboBoxAlgoritmos, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButtonSubirPaguina, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButtonRUNRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButtonLimpiarPaguinas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jComboBoxPaguina, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jButtonInfoAlgorimo)
+                        .addGap(18, 18, 18)
+                        .addComponent(jButtonLimpiarTodo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -423,9 +457,15 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jComboBoxPaguina, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButtonSubirPaguina)
+                .addGap(12, 12, 12)
+                .addComponent(jButtonLimpiarPaguinas)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButtonRUNRemplazo)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonLimpiarTodo)
+                    .addComponent(jButtonInfoAlgorimo))
+                .addGap(18, 18, 18))
         );
 
         jTablePaguinas.setModel(new javax.swing.table.DefaultTableModel(
@@ -436,10 +476,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
             }
         ));
+        jTablePaguinas.setEnabled(false);
         jScrollPane2.setViewportView(jTablePaguinas);
 
         Paguinas.setForeground(new java.awt.Color(255, 255, 255));
-        Paguinas.setText("Paguinas");
+        Paguinas.setText("Secuencia de Paguinas");
 
         jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setText("Simulacion");
@@ -448,7 +489,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jPanelResultadosRemplazo.setLayout(jPanelResultadosRemplazoLayout);
         jPanelResultadosRemplazoLayout.setHorizontalGroup(
             jPanelResultadosRemplazoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 602, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         jPanelResultadosRemplazoLayout.setVerticalGroup(
             jPanelResultadosRemplazoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -464,24 +505,15 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel4Layout.createSequentialGroup()
-                            .addGap(26, 26, 26)
-                            .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel4Layout.createSequentialGroup()
-                            .addGap(18, 18, 18)
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPanelSimulacionRemplazo, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(52, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(Paguinas, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPanelSimulacionRemplazo)
+                    .addComponent(jPanelResultadosRemplazo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 654, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -524,93 +556,103 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {
 //GEN-FIRST:event_btnAgregarActionPerformed
-    try {
-        String id = "P" + (modeloTabla.getRowCount() + 1);
-        int llegada = Integer.parseInt(tiempoLlegada.getText().trim());
-        int rafaga  = Integer.parseInt(cpuBurst.getText().trim());
-        if (llegada < 0 || rafaga <= 0) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Llegada ≥ 0 y Ráfaga > 0");
-            return;
+        // TODO add your handling code here:
+        try {
+            String id = "P" + (modeloTabla.getRowCount() + 1);
+            int llegada = Integer.parseInt(tiempoLlegada.getText().trim());
+            int rafaga = Integer.parseInt(cpuBurst.getText().trim());
+            if (llegada < 0 || rafaga <= 0) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Llegada ≥ 0 y Ráfaga > 0");
+                return;
+            }
+            modeloTabla.addRow(new Object[]{id, llegada, rafaga});
+        } catch (NumberFormatException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Ingresa números válidos en Llegada y Ráfaga.");
         }
-        modeloTabla.addRow(new Object[]{id, llegada, rafaga});
-    } catch (NumberFormatException ex) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Ingresa números válidos en Llegada y Ráfaga.");
-    }
     }//GEN-LAST:event_btnAgregarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-
-    int totalFilas = modeloTabla.getRowCount();
-    if (totalFilas > 0) {
-        modeloTabla.removeRow(totalFilas - 1); // Elimina la última fila
-        // Reetiquetar IDs
-        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
-            modeloTabla.setValueAt("P" + (i + 1), i, 0);
+        // TODO add your handling code here:
+        int totalFilas = modeloTabla.getRowCount();
+        if (totalFilas > 0) {
+            modeloTabla.removeRow(totalFilas - 1); // Elimina la última fila
+            // Reetiquetar IDs
+            for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+                modeloTabla.setValueAt("P" + (i + 1), i, 0);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No hay procesos para eliminar.");
         }
-    } else {
-        JOptionPane.showMessageDialog(this, "No hay procesos para eliminar.");
-    }
     }//GEN-LAST:event_btnEliminarActionPerformed
 
-    private void simularRunActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    private void simularRunActionPerformed(java.awt.event.ActionEvent evt) {
 //GEN-FIRST:event_simularRunActionPerformed
-    var procesos = leerProcesosDeTabla();
-    if (procesos.isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Agrega al menos un proceso.");
-        return;
-    }
-
-    String algoritmo = String.valueOf(tipoAlgoritmo.getSelectedItem());
-    Planificador planificador;
-
-    if ("RR".equals(algoritmo)) {
-        try {
-            int q = Integer.parseInt(quantum.getText().trim());
-            if (q <= 0) throw new NumberFormatException();
-            planificador = new p1.schedule.RR(q);
-            quantumActual.setText(String.valueOf(q));
-        } catch (NumberFormatException ex) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Quantum debe ser un número entero positivo.");
+        // TODO add your handling code here:
+        var procesos = leerProcesosDeTabla();
+        if (procesos.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Agrega al menos un proceso.");
             return;
         }
-    } else {
-        planificador = crearPlanificador(); // FCFS, SJF, SRTF, etc.
-    }
 
-    ultimoResultado = planificador.simular(procesos);
-    SimulationResult result = ultimoResultado;
-    gantt.animarSegmentos(result.getTimeline());
+        String algoritmo = String.valueOf(tipoAlgoritmo.getSelectedItem());
+        Planificador planificador;
 
-    // Mostrar métricas en orden de ejecución
-    StringBuilder sb = new StringBuilder("=== Métricas ===\n");
-    double e = 0, r = 0, tt = 0; int n = 0;
-    Set<String> mostrados = new HashSet<>();
+        if ("RR".equals(algoritmo)) {
+            try {
+                int q = Integer.parseInt(quantum.getText().trim());
+                if (q <= 0) {
+                    throw new NumberFormatException();
+                }
+                planificador = new p1.schedule.RR(q);
+                quantumActual.setText(String.valueOf(q));
+            } catch (NumberFormatException ex) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Quantum debe ser un número entero positivo.");
+                return;
+            }
+        } else {
+            planificador = crearPlanificador(); // FCFS, SJF, SRTF, etc.
+        }
 
-    for (var seg : result.getTimeline()) {
-        String pid = seg.getProcesoId();
-        if ("IDLE".equals(pid) || mostrados.contains(pid)) continue;
+        ultimoResultado = planificador.simular(procesos);
+        SimulationResult result = ultimoResultado;
+        gantt.animarSegmentos(result.getTimeline());
 
-        var m = result.getMetricsPorProceso().get(pid);
-        sb.append(String.format("%s -> espera=%d, respuesta=%d, turnaround=%d%n",
-                pid, m.espera, m.respuesta, m.turnaround));
-        e += m.espera; r += m.respuesta; tt += m.turnaround; n++;
-        mostrados.add(pid);
-    }
+        // Mostrar métricas en orden de ejecución
+        StringBuilder sb = new StringBuilder("=== Métricas ===\n");
+        double e = 0, r = 0, tt = 0;
+        int n = 0;
+        Set<String> mostrados = new HashSet<>();
 
-    if (n > 0) {
-        sb.append(String.format("%nPromedios: espera=%.2f, respuesta=%.2f, turnaround=%.2f", e/n, r/n, tt/n));
-    }
+        for (var seg : result.getTimeline()) {
+            String pid = seg.getProcesoId();
+            if ("IDLE".equals(pid) || mostrados.contains(pid)) {
+                continue;
+            }
 
-    textAreaResultados.setText(sb.toString());
-    textAreaResultados.repaint();
+            var m = result.getMetricsPorProceso().get(pid);
+            sb.append(String.format("%s -> espera=%d, respuesta=%d, turnaround=%d%n",
+                    pid, m.espera, m.respuesta, m.turnaround));
+            e += m.espera;
+            r += m.respuesta;
+            tt += m.turnaround;
+            n++;
+            mostrados.add(pid);
+        }
+
+        if (n > 0) {
+            sb.append(String.format("%nPromedios: espera=%.2f, respuesta=%.2f, turnaround=%.2f", e / n, r / n, tt / n));
+        }
+
+        textAreaResultados.setText(sb.toString());
+        textAreaResultados.repaint();
 
     }//GEN-LAST:event_simularRunActionPerformed
 
     private void tipoAlgoritmoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tipoAlgoritmoActionPerformed
         // TODO add your handling code here:
-    String seleccionado = String.valueOf(tipoAlgoritmo.getSelectedItem());
+        String seleccionado = String.valueOf(tipoAlgoritmo.getSelectedItem());
 
         if ("RR".equals(seleccionado)) {
             quantum.setEnabled(true);
@@ -621,7 +663,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     private void jRepetirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRepetirActionPerformed
         // TODO add your handling code here:
-        
+
         if (ultimoResultado != null) {
             gantt.animarSegmentos(ultimoResultado.getTimeline());
         } else {
@@ -635,147 +677,446 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     private void jButtonSubirPaguinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSubirPaguinaActionPerformed
         String page = (String) jComboBoxPaguina.getSelectedItem();
-        if (page == null || page.isBlank()) return;
+        if (page == null || page.isBlank()) {
+            return;
+        }
 
         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
         model.addRow(new Object[]{page});
 
-        if (listaPaginas == null) listaPaginas = new java.util.ArrayList<>();
+        if (listaPaginas == null) {
+            listaPaginas = new java.util.ArrayList<>();
+        }
         listaPaginas.add(page.substring(0, 1).toUpperCase());
     }//GEN-LAST:event_jButtonSubirPaguinaActionPerformed
 
     private void jButtonRUNRemplazoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNRemplazoActionPerformed
-    String algoritmo = String.valueOf(jComboBoxAlgoritmos.getSelectedItem());
-    // Toma la secuencia desde la tabla
-    java.util.List<String> referencias = new java.util.ArrayList<>();
-    javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
-    for (int i = 0; i < model.getRowCount(); i++) {
-        Object val = model.getValueAt(i, 0);
-        if (val != null) {
-            String s = val.toString().trim();
-            if (!s.isEmpty()) referencias.add(s.substring(0, 1).toUpperCase());
+        // TODO add your handling code here:       
+
+        String algoritmo = String.valueOf(jComboBoxAlgoritmos.getSelectedItem());
+
+        // Construye secuencia desde la tabla
+        java.util.List<String> referencias = new java.util.ArrayList<>();
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object val = model.getValueAt(i, 0);
+            if (val != null) {
+                String s = val.toString().trim();
+                if (!s.isEmpty()) {
+                    referencias.add(s.substring(0, 1).toUpperCase());
+                }
+            }
         }
-    }
-    if (referencias.isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this,
-                "Agrega al menos una Paguina (usa 'Agregar Paguina').",
-                "Atención", javax.swing.JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-
-    // Pide número de marcos
-    Integer marcos = pedirNumeroDeMarcos(this);
-    if (marcos == null) return; // cancelado
-
-    try {
-        FIFOPageReplacement.Result panelResult; // lo que mostrará SimulationPanel
-        String algoritmoUsado;
-
-        if ("FIFO".equalsIgnoreCase(algoritmo)) {
-            algoritmoUsado = "FIFO";
-            FIFOPageReplacement fifo = new FIFOPageReplacement();
-            panelResult = fifo.simulate(referencias, marcos);
-        } else if ("LRU".equalsIgnoreCase(algoritmo)) {
-            algoritmoUsado = "LRU";
-            LRUPageReplacement lru = new LRUPageReplacement();
-            LRUPageReplacement.Result r = lru.simulate(referencias, marcos);
-            // Adaptamos al tipo esperado por SimulationPanel
-            panelResult = LRUPageReplacement.toFifoResult(r);
-        } else {
-            javax.swing.JOptionPane.showMessageDialog(this,
-                    "Algoritmo no implementado aún: " + algoritmo,
-                    "Info", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        if (referencias.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Agrega al menos una Paguina (usa 'Agregar Paguina').",
+                    "Atención", javax.swing.JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
 
-        // Muestra la simulación en el Scroll (resaltado, tooltips, métricas)
-        SimulationPanel panel = new SimulationPanel(panelResult);
+        // Pide marcos
+        Integer marcos = pedirNumeroDeMarcos(this);
+        if (marcos == null) {
+            return;
+        }
+
+        try {
+            FIFOPageReplacement.Result panelResult;
+            String algoritmoUsado;
+
+            if ("Clock".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "Clock";
+                ClockPageReplacement clk = new ClockPageReplacement();
+                ClockPageReplacement.Result clockFull = clk.simulate(referencias, marcos);
+                panelResult = ClockPageReplacement.toFifoResult(clockFull);
+
+                SimulationPanel panel = new SimulationPanel(panelResult, clockFull); // ✅ pasa objeto completo
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("Second Chance".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "Second Chance";
+                SecondChancePageReplacement sc = new SecondChancePageReplacement();
+                SecondChancePageReplacement.Result scFull = sc.simulate(referencias, marcos);
+                panelResult = SecondChancePageReplacement.toFifoResult(scFull);
+
+                SimulationPanel panel = new SimulationPanel(panelResult, scFull);   // ✅ pasa objeto completo
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("FIFO".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "FIFO";
+                FIFOPageReplacement fifo = new FIFOPageReplacement();
+                panelResult = fifo.simulate(referencias, marcos);
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("LRU".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "LRU";
+                LRUPageReplacement lru = new LRUPageReplacement();
+                panelResult = LRUPageReplacement.toFifoResult(lru.simulate(referencias, marcos));
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("Optimal Page Replacement".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "Óptimo";
+                OptimoPageReplacement opt = new OptimoPageReplacement();
+                panelResult = OptimoPageReplacement.toFifoResult(opt.simulate(referencias, marcos));
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("Working Set".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "Working Set";
+                int windowSize = pedirWindowSize(this);
+                WorkingSetPageReplacement ws = new WorkingSetPageReplacement();
+                panelResult = WorkingSetPageReplacement.toFifoResult(ws.simulate(referencias, marcos, windowSize));
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("VMIN(Variable MIN)".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "VMIN";
+                int horizon = pedirHorizon(this);
+                VMINPageReplacement vmin = new VMINPageReplacement();
+                panelResult = VMINPageReplacement.toFifoResult(vmin.simulate(referencias, marcos, horizon));
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else if ("PFF".equalsIgnoreCase(algoritmo)) {
+                algoritmoUsado = "PFF";
+                int upper = pedirUmbral("Umbral superior (p.ej. 2):");
+                int lower = pedirUmbral("Umbral inferior (p.ej. 5):");
+                PFFPageReplacement pff = new PFFPageReplacement();
+                panelResult = PFFPageReplacement.toFifoResult(pff.simulate(referencias, marcos, upper, lower));
+                SimulationPanel panel = new SimulationPanel(panelResult);
+                mostrarSimulacion(panel, panelResult, algoritmoUsado, referencias, marcos);
+
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(
+                        this, "Algoritmo no implementado aún: " + algoritmo,
+                        "Info", javax.swing.JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            javax.swing.JOptionPane.showMessageDialog(
+                    this, "Error en la simulación: " + ex.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void mostrarSimulacion(SimulationPanel panel,
+            FIFOPageReplacement.Result panelResult,
+            String algoritmoUsado,
+            java.util.List<String> referencias,
+            int marcos) {
         jScrollPanelSimulacionRemplazo.setViewportView(panel);
         jScrollPanelSimulacionRemplazo.revalidate();
         jScrollPanelSimulacionRemplazo.repaint();
 
-        // === Panel de resultados (texto) ===
         String finalFramesString = FIFOPageReplacement.Result.formatFrames(panelResult.finalFrames());
         String seq = String.join(", ", referencias);
         String resumen = String.format(
                 "Algoritmo: %s%nSecuencia: %s%nMarcos: %d%n%nResultado final: %s%nFallas: %d%nHits: %d%nTasa de fallas: %.2f%%",
-                algoritmoUsado, seq, marcos, finalFramesString, panelResult.totalFaults, panelResult.totalHits,
+                algoritmoUsado, seq, marcos, finalFramesString,
+                panelResult.totalFaults, panelResult.totalHits,
                 (panelResult.totalFaults * 100.0) / Math.max(1, (panelResult.totalFaults + panelResult.totalHits))
         );
         resultadosRemplazoArea.setText(resumen);
 
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        javax.swing.JOptionPane.showMessageDialog(this,
-                "Error en la simulación: " + ex.getMessage(),
-                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-    }
+
     }//GEN-LAST:event_jButtonRUNRemplazoActionPerformed
-    
-//1)----Algotimos de Planificaion----
-private List<Proceso> leerProcesosDeTabla() {
-    List<Proceso> lista = new ArrayList<>();
-    for (int i = 0; i < modeloTabla.getRowCount(); i++) {
-        String id = String.valueOf(modeloTabla.getValueAt(i, 0));
-        int llegada = Integer.parseInt(String.valueOf(modeloTabla.getValueAt(i, 1)));
-        int rafaga  = Integer.parseInt(String.valueOf(modeloTabla.getValueAt(i, 2)));
-        lista.add(new Proceso(id, llegada, rafaga));
-    }
-    return lista;
-}
 
+    private void jButtonLimpiarPaguinasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarPaguinasActionPerformed
+        // TODO add your handling code here:
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        model.setRowCount(0); // Elimina todas las filas
+        if (listaPaginas != null) {
+            listaPaginas.clear(); // Limpia la lista interna también
+        }
+        // Opcional: limpiar la simulación y resultados
+        jScrollPanelSimulacionRemplazo.setViewportView(null);
+        resultadosRemplazoArea.setText("");
 
-private Planificador crearPlanificador() {
-    String alg = String.valueOf(tipoAlgoritmo.getSelectedItem());
-    switch (alg) {
-        case "FCFS": return new FCFS();
-        case "SJF":  return new SJF();
-        case "SRTF": return new SRTF();
-        default: return new FCFS();
-    }
-}
-//2)----Algotimos de remplazo----
-private static Integer pedirNumeroDeMarcos(java.awt.Component parent) {
-    while (true) {
-        String input = javax.swing.JOptionPane.showInputDialog(parent,
-                "Número de marcos (p. ej. 3):",
-                "Configurar marcos", javax.swing.JOptionPane.QUESTION_MESSAGE);
-        if (input == null) return null; // cancelado
-        input = input.trim();
-        if (input.isEmpty()) continue;
-        try {
-            int n = Integer.parseInt(input);
-            if (n > 0 && n <= 20) {
-                return n;
-            } else {
-                javax.swing.JOptionPane.showMessageDialog(parent,
-                        "Ingresa un entero entre 1 y 20.",
-                        "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+    }//GEN-LAST:event_jButtonLimpiarPaguinasActionPerformed
+
+    private void jButtonLimpiarTodoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLimpiarTodoActionPerformed
+        // TODO add your handling code here:
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+                "¿Seguro que quieres borrar la secuencia, simulación y resultados?",
+                "Confirmar", javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+            // Borra la tabla
+            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+            model.setRowCount(0);
+            if (listaPaginas != null) {
+                listaPaginas.clear();
             }
-        } catch (NumberFormatException e) {
-            javax.swing.JOptionPane.showMessageDialog(parent,
-                    "Ingresa un entero válido.",
-                    "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+
+            // Borra simulación
+            jScrollPanelSimulacionRemplazo.setViewportView(null);
+
+            // Borra resultados
+            resultadosRemplazoArea.setText("");
+        }
+    }//GEN-LAST:event_jButtonLimpiarTodoActionPerformed
+
+    private void jButtonInfoAlgorimoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonInfoAlgorimoActionPerformed
+        // TODO add your handling code here:
+
+        // Obtiene el algoritmo seleccionado en el combo
+        String algoritmo = String.valueOf(jComboBoxAlgoritmos.getSelectedItem());
+
+        // Texto explicativo según el algoritmo
+        String mensaje;
+        switch (algoritmo) {
+            case "FIFO":
+                mensaje = """
+            FIFO (First-In, First-Out)
+            --------------------------------
+            • Estrategia simple: la primera página que entra es la primera en salir.
+            • Si hay hueco, coloca la página.
+            • Si no hay hueco, reemplaza la página más antigua.
+            """;
+                break;
+
+            case "LRU":
+                mensaje = """
+            LRU (Least Recently Used)
+            --------------------------------
+            • Reemplaza la página que no se ha usado por más tiempo.
+            • Mantiene registro del último uso de cada página.
+            • Si hay hueco, coloca la página; si no, expulsa la menos recientemente usada.
+            """;
+                break;
+
+            case "Optimal Page Replacement":
+                mensaje = """
+            Óptimo
+            --------------------------------
+            • Reemplaza la página que se usará más tarde en el futuro (o nunca).
+            • Es teórico, requiere conocer las referencias futuras.
+            """;
+                break;
+
+            case "Clock":
+                mensaje = """
+            Clock (Segunda oportunidad con puntero)
+            --------------------------------
+            • Cada marco tiene un bit de uso (u).
+            • Si hay hueco, coloca la página y u=1.
+            • Si no hay hueco:
+              - El puntero recorre marcos:
+                * Si u=0 → reemplaza ahí.
+                * Si u=1 → pone u=0 y avanza.
+            • Después de reemplazar, el puntero avanza.
+            """;
+                break;
+
+            case "Second Chance":
+                mensaje = """
+            Second Chance (FIFO con bit de referencia)
+            --------------------------------
+            • Usa una cola FIFO y un bit de referencia (u).
+            • Si hay hueco, coloca la página y u=1.
+            • Si no hay hueco:
+              - Toma el más antiguo:
+                * Si u=0 → reemplaza.
+                * Si u=1 → pone u=0 y lo reencola al final.
+            """;
+                break;
+
+            case "VMIN(Variable MIN)":
+                mensaje = """
+            VMIN (Variable MIN)
+            --------------------------------
+            • Usa una ventana futura (horizon) para decidir la víctima.
+            • Si una página no aparece en la ventana → candidata inmediata.
+            • Si todas aparecen → expulsa la que aparece más tarde.
+            """;
+                break;
+
+            case "Working Set":
+                mensaje = """
+            Working Set
+            --------------------------------
+            • Mantiene las páginas referenciadas en la ventana más reciente.
+            • Elimina páginas fuera del conjunto antes de colocar la nueva.
+            """;
+                break;
+
+            case "PFF":
+                mensaje = """
+            PFF (Page Fault Frequency)
+            --------------------------------
+            • Ajusta dinámicamente el número de marcos según la frecuencia de fallas.
+            • Alta frecuencia → aumenta marcos.
+            • Baja frecuencia → reduce marcos.
+            """;
+                break;
+
+            default:
+                mensaje = "Selecciona un algoritmo para ver su explicación.";
+                break;
+        }
+
+        // Mostrar ventana emergente grande
+        JTextArea textArea = new JTextArea(mensaje);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 300));
+
+        JOptionPane.showMessageDialog(
+                this,
+                scrollPane,
+                "Información del algoritmo: " + algoritmo,
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+    }//GEN-LAST:event_jButtonInfoAlgorimoActionPerformed
+
+//1)----Algotimos de Planificaion----
+    private List<Proceso> leerProcesosDeTabla() {
+        List<Proceso> lista = new ArrayList<>();
+        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+            String id = String.valueOf(modeloTabla.getValueAt(i, 0));
+            int llegada = Integer.parseInt(String.valueOf(modeloTabla.getValueAt(i, 1)));
+            int rafaga = Integer.parseInt(String.valueOf(modeloTabla.getValueAt(i, 2)));
+            lista.add(new Proceso(id, llegada, rafaga));
+        }
+        return lista;
+    }
+
+    private Planificador crearPlanificador() {
+        String alg = String.valueOf(tipoAlgoritmo.getSelectedItem());
+        switch (alg) {
+            case "FCFS":
+                return new FCFS();
+            case "SJF":
+                return new SJF();
+            case "SRTF":
+                return new SRTF();
+            default:
+                return new FCFS();
         }
     }
-}
-   
+//2)----Algotimos de remplazo----
 
+    private static Integer pedirNumeroDeMarcos(java.awt.Component parent) {
+        while (true) {
+            String input = javax.swing.JOptionPane.showInputDialog(parent,
+                    "Número de marcos (p. ej. 3):",
+                    "Configurar marcos", javax.swing.JOptionPane.QUESTION_MESSAGE);
+            if (input == null) {
+                return null; // cancelado
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+            try {
+                int n = Integer.parseInt(input);
+                if (n > 0 && n <= 20) {
+                    return n;
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(parent,
+                            "Ingresa un entero entre 1 y 20.",
+                            "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(parent,
+                        "Ingresa un entero válido.",
+                        "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
 
+    private static int pedirHorizon(java.awt.Component parent) {
+        while (true) {
+            String input = javax.swing.JOptionPane.showInputDialog(parent,
+                    "Tamaño de ventana (horizon) para VMIN (p.ej. 5):",
+                    "Configurar VMIN", javax.swing.JOptionPane.QUESTION_MESSAGE);
+            if (input == null) {
+                return 5; // valor por defecto si cancelan
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+            try {
+                int n = Integer.parseInt(input);
+                if (n > 0 && n <= 50) {
+                    return n;
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(parent,
+                            "Ingresa un entero entre 1 y 50.",
+                            "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(parent,
+                        "Ingresa un entero válido.",
+                        "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
 
+    private static int pedirWindowSize(java.awt.Component parent) {
+        while (true) {
+            String input = javax.swing.JOptionPane.showInputDialog(parent,
+                    "Tamaño de ventana (Working Set) (p.ej. 4):",
+                    "Configurar Working Set", javax.swing.JOptionPane.QUESTION_MESSAGE);
+            if (input == null) {
+                return 4; // valor por defecto
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+            try {
+                int n = Integer.parseInt(input);
+                if (n > 0 && n <= 50) {
+                    return n;
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(parent,
+                            "Ingresa un entero entre 1 y 50.",
+                            "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(parent,
+                        "Ingresa un entero válido.",
+                        "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
 
+    private static int pedirUmbral(String mensaje) {
+        while (true) {
+            String input = javax.swing.JOptionPane.showInputDialog(null, mensaje, "Configurar PFF", javax.swing.JOptionPane.QUESTION_MESSAGE);
+            if (input == null) {
+                return 3; // valor por defecto
+            }
+            input = input.trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+            try {
+                int n = Integer.parseInt(input);
+                if (n > 0 && n <= 50) {
+                    return n;
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(null, "Ingresa un entero entre 1 y 50.", "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(null, "Ingresa un entero válido.", "Valor inválido", javax.swing.JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
 
-
-
-
-
-
-
-
-
-
-
-    
     /**
      * @param args the command line arguments
      */
@@ -806,6 +1147,9 @@ private static Integer pedirNumeroDeMarcos(java.awt.Component parent) {
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField cpuBurst;
+    private javax.swing.JButton jButtonInfoAlgorimo;
+    private javax.swing.JButton jButtonLimpiarPaguinas;
+    private javax.swing.JButton jButtonLimpiarTodo;
     private javax.swing.JButton jButtonRUNRemplazo;
     private javax.swing.JButton jButtonSubirPaguina;
     private javax.swing.JComboBox<String> jComboBoxAlgoritmos;

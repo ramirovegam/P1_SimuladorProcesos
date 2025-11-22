@@ -1,5 +1,2 @@
-FIFOPageReplacement
-principal.SimulationPanel
 principal.FIFOPageReplacement
-FIFOPageReplacement$SimulationResult
 principal.FIFOPageReplacement$Result

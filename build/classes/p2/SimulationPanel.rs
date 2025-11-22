@@ -1,2 +1,2 @@
 principal.SimulationPanel
-SimulationPanel
+principal.SimulationPanel$SimulationPanel

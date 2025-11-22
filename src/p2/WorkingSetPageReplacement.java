@@ -1,16 +1,16 @@
+
 package principal;
 
 import java.util.*;
 
-public class FIFOPageReplacement {
+public class WorkingSetPageReplacement {
 
-    /** Resultado de la simulación con métricas y metadatos por paso/fila. */
     public static class Result {
-        public final List<String[]> snapshots;       // Fila 0: estado inicial; Fila i: estado tras paso i
-        public final List<String> labels;            // "Estado inicial:", "Paso i: entra X"
-        public final List<Boolean> faultsPerRow;     // true si la fila i resultó de una falla (fila 0: false)
-        public final List<Integer> changedIndexPerRow; // índice de marco actualizado en la fila i, -1 si no cambió
-        public final List<String> pagePerRow;        // página del paso i (fila 0: null)
+        public final List<String[]> snapshots;
+        public final List<String> labels;
+        public final List<Boolean> faultsPerRow;
+        public final List<Integer> changedIndexPerRow;
+        public final List<String> pagePerRow;
         public final int frameCount;
         public final int totalFaults;
         public final int totalHits;
@@ -43,9 +43,9 @@ public class FIFOPageReplacement {
         }
     }
 
-    /** Simula FIFO con páginas (letras) y calcula métricas y metadatos por paso. */
-    public Result simulate(List<String> references, int frameCount) {
+    public Result simulate(List<String> references, int frameCount, int windowSize) {
         if (frameCount <= 0) throw new IllegalArgumentException("El número de marcos debe ser > 0.");
+        if (windowSize <= 0) windowSize = 4; // valor por defecto
 
         List<String[]> shots = new ArrayList<>();
         List<String> labels = new ArrayList<>();
@@ -53,11 +53,10 @@ public class FIFOPageReplacement {
         List<Integer> changedIndexPerRow = new ArrayList<>();
         List<String> pagePerRow = new ArrayList<>();
 
-        String[] frames = new String[frameCount];      // todo null al inicio
-        Deque<Integer> fifoQueue = new ArrayDeque<>(); // orden de marcos ocupados (índices)
+        String[] frames = new String[frameCount];
+        Queue<Integer> fifoQueue = new LinkedList<>();
         int faults = 0, hits = 0;
 
-        // Fila 0: estado inicial (sin página)
         shots.add(copy(frames));
         labels.add("Estado inicial:");
         faultsPerRow.add(false);
@@ -66,31 +65,54 @@ public class FIFOPageReplacement {
 
         for (int i = 0; i < references.size(); i++) {
             String page = normalize(references.get(i));
-            
-
             boolean fault;
             int changedIndex = -1;
 
-            if (!contains(frames, page)) {
-                fault = true;
+            int idx = indexOf(frames, page);
+            if (idx >= 0) {
+                hits++;
+                fault = false;
+            } else {
                 faults++;
+                fault = true;
+
+                // Calcula el Working Set (últimas windowSize referencias)
+                Set<String> workingSet = new HashSet<>();
+                for (int j = Math.max(0, i - windowSize + 1); j <= i; j++) {
+                    workingSet.add(normalize(references.get(j)));
+                }
+
                 int empty = firstNull(frames);
                 if (empty >= 0) {
                     frames[empty] = page;
-                    fifoQueue.addLast(empty);
-                    changedIndex = empty; // marco llenado
+                    fifoQueue.add(empty);
+                    changedIndex = empty;
                 } else {
-                    int victim = fifoQueue.removeFirst();
-                    frames[victim] = page;
-                    fifoQueue.addLast(victim);
-                    changedIndex = victim; // marco reemplazado
+                    // Elimina páginas que no están en el Working Set
+                    Iterator<Integer> it = fifoQueue.iterator();
+                    while (it.hasNext()) {
+                        int pos = it.next();
+                        if (!workingSet.contains(frames[pos])) {
+                            frames[pos] = null;
+                            it.remove();
+                        }
+                    }
+                    // Si hay espacio tras limpieza
+                    empty = firstNull(frames);
+                    if (empty >= 0) {
+                        frames[empty] = page;
+                        fifoQueue.add(empty);
+                        changedIndex = empty;
+                    } else {
+                        // Si sigue lleno, aplica FIFO
+                        int victim = fifoQueue.poll();
+                        frames[victim] = page;
+                        fifoQueue.add(victim);
+                        changedIndex = victim;
+                    }
                 }
-            } else {
-                fault = false;
-                hits++;
-                // En FIFO, el orden no cambia en un hit.
             }
-             // Ahora construimos el label con la info correct
+            // Ahora construimos el label con la info correct
             String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
             shots.add(copy(frames));
             labels.add(label);
@@ -100,27 +122,33 @@ public class FIFOPageReplacement {
         }
 
         return new Result(shots, labels, faultsPerRow, changedIndexPerRow, pagePerRow,
-                          frameCount, faults, hits);
+                frameCount, faults, hits);
     }
 
     // ===== Helpers =====
     private static String[] copy(String[] src) { return Arrays.copyOf(src, src.length); }
-
-    private static boolean contains(String[] frames, String p) {
-        if (p == null) return false;
-        for (String f : frames) if (p.equals(f)) return true;
-        return false;
+    private static int indexOf(String[] frames, String page) {
+        if (page == null) return -1;
+        for (int i = 0; i < frames.length; i++) {
+            if (page.equals(frames[i])) return i;
+        }
+        return -1;
     }
-
     private static int firstNull(String[] frames) {
         for (int i = 0; i < frames.length; i++) if (frames[i] == null) return i;
         return -1;
     }
-
     private static String normalize(String p) {
         if (p == null) return null;
         String s = p.trim();
         if (s.isEmpty()) return null;
         return s.substring(0, 1).toUpperCase(Locale.ROOT);
+    }
+
+    public static FIFOPageReplacement.Result toFifoResult(Result r) {
+        return new FIFOPageReplacement.Result(
+                r.snapshots, r.labels, r.faultsPerRow, r.changedIndexPerRow,
+                r.pagePerRow, r.frameCount, r.totalFaults, r.totalHits
+        );
     }
 }

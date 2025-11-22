@@ -1,0 +1,2 @@
+principal.LRUPageReplacement$Result
+principal.LRUPageReplacement

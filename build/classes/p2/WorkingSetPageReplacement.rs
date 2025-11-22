@@ -1,0 +1,2 @@
+principal.WorkingSetPageReplacement
+principal.WorkingSetPageReplacement$Result

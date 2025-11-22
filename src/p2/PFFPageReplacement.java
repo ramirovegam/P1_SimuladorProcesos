@@ -1,30 +1,30 @@
+
 package principal;
 
 import java.util.*;
 
-public class FIFOPageReplacement {
+public class PFFPageReplacement {
 
-    /** Resultado de la simulación con métricas y metadatos por paso/fila. */
     public static class Result {
-        public final List<String[]> snapshots;       // Fila 0: estado inicial; Fila i: estado tras paso i
-        public final List<String> labels;            // "Estado inicial:", "Paso i: entra X"
-        public final List<Boolean> faultsPerRow;     // true si la fila i resultó de una falla (fila 0: false)
-        public final List<Integer> changedIndexPerRow; // índice de marco actualizado en la fila i, -1 si no cambió
-        public final List<String> pagePerRow;        // página del paso i (fila 0: null)
-        public final int frameCount;
+        public final List<String[]> snapshots;
+        public final List<String> labels;
+        public final List<Boolean> faultsPerRow;
+        public final List<Integer> changedIndexPerRow;
+        public final List<String> pagePerRow;
+        public final int frameCountFinal;
         public final int totalFaults;
         public final int totalHits;
 
         public Result(List<String[]> snapshots, List<String> labels,
                       List<Boolean> faultsPerRow, List<Integer> changedIndexPerRow,
-                      List<String> pagePerRow, int frameCount,
+                      List<String> pagePerRow, int frameCountFinal,
                       int totalFaults, int totalHits) {
             this.snapshots = snapshots;
             this.labels = labels;
             this.faultsPerRow = faultsPerRow;
             this.changedIndexPerRow = changedIndexPerRow;
             this.pagePerRow = pagePerRow;
-            this.frameCount = frameCount;
+            this.frameCountFinal = frameCountFinal;
             this.totalFaults = totalFaults;
             this.totalHits = totalHits;
         }
@@ -43,21 +43,22 @@ public class FIFOPageReplacement {
         }
     }
 
-    /** Simula FIFO con páginas (letras) y calcula métricas y metadatos por paso. */
-    public Result simulate(List<String> references, int frameCount) {
-        if (frameCount <= 0) throw new IllegalArgumentException("El número de marcos debe ser > 0.");
+    public Result simulate(List<String> references, int initialFrames, int upperThreshold, int lowerThreshold) {
+        if (initialFrames <= 0) throw new IllegalArgumentException("El número inicial de marcos debe ser > 0.");
+        if (upperThreshold <= 0 || lowerThreshold <= 0) throw new IllegalArgumentException("Umbrales deben ser > 0.");
 
+        int frameCount = initialFrames;
         List<String[]> shots = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         List<Boolean> faultsPerRow = new ArrayList<>();
         List<Integer> changedIndexPerRow = new ArrayList<>();
         List<String> pagePerRow = new ArrayList<>();
 
-        String[] frames = new String[frameCount];      // todo null al inicio
-        Deque<Integer> fifoQueue = new ArrayDeque<>(); // orden de marcos ocupados (índices)
+        String[] frames = new String[frameCount];
+        Queue<Integer> fifoQueue = new LinkedList<>();
         int faults = 0, hits = 0;
+        int timeSinceLastFault = 0;
 
-        // Fila 0: estado inicial (sin página)
         shots.add(copy(frames));
         labels.add("Estado inicial:");
         faultsPerRow.add(false);
@@ -65,32 +66,46 @@ public class FIFOPageReplacement {
         pagePerRow.add(null);
 
         for (int i = 0; i < references.size(); i++) {
+            timeSinceLastFault++;
             String page = normalize(references.get(i));
-            
-
             boolean fault;
             int changedIndex = -1;
 
-            if (!contains(frames, page)) {
-                fault = true;
+            int idx = indexOf(frames, page);
+            if (idx >= 0) {
+                hits++;
+                fault = false;
+            } else {
                 faults++;
+                fault = true;
+                timeSinceLastFault = 0;
+
                 int empty = firstNull(frames);
                 if (empty >= 0) {
                     frames[empty] = page;
-                    fifoQueue.addLast(empty);
-                    changedIndex = empty; // marco llenado
+                    fifoQueue.add(empty);
+                    changedIndex = empty;
                 } else {
-                    int victim = fifoQueue.removeFirst();
+                    int victim = fifoQueue.poll();
                     frames[victim] = page;
-                    fifoQueue.addLast(victim);
-                    changedIndex = victim; // marco reemplazado
+                    fifoQueue.add(victim);
+                    changedIndex = victim;
                 }
-            } else {
-                fault = false;
-                hits++;
-                // En FIFO, el orden no cambia en un hit.
             }
-             // Ahora construimos el label con la info correct
+
+            // Ajuste dinámico de marcos
+            if (timeSinceLastFault < upperThreshold) {
+                // Alta frecuencia de fallas → aumentar marcos
+                frameCount++;
+                frames = Arrays.copyOf(frames, frameCount);
+            } else if (timeSinceLastFault > lowerThreshold && frameCount > 1) {
+                // Baja frecuencia → reducir marcos
+                frameCount--;
+                frames = Arrays.copyOf(frames, frameCount);
+                // Ajustar la cola si se reduce
+                while (fifoQueue.size() > frameCount) fifoQueue.poll();
+            }
+            // Ahora construimos el label con la info correct
             String label = "Paso " + (i + 1) + ": ENTRA " + page + (fault ? " (Falla)" : " (Hit)");
             shots.add(copy(frames));
             labels.add(label);
@@ -100,27 +115,33 @@ public class FIFOPageReplacement {
         }
 
         return new Result(shots, labels, faultsPerRow, changedIndexPerRow, pagePerRow,
-                          frameCount, faults, hits);
+                frameCount, faults, hits);
     }
 
     // ===== Helpers =====
     private static String[] copy(String[] src) { return Arrays.copyOf(src, src.length); }
-
-    private static boolean contains(String[] frames, String p) {
-        if (p == null) return false;
-        for (String f : frames) if (p.equals(f)) return true;
-        return false;
+    private static int indexOf(String[] frames, String page) {
+        if (page == null) return -1;
+        for (int i = 0; i < frames.length; i++) {
+            if (page.equals(frames[i])) return i;
+        }
+        return -1;
     }
-
     private static int firstNull(String[] frames) {
         for (int i = 0; i < frames.length; i++) if (frames[i] == null) return i;
         return -1;
     }
-
     private static String normalize(String p) {
         if (p == null) return null;
         String s = p.trim();
         if (s.isEmpty()) return null;
         return s.substring(0, 1).toUpperCase(Locale.ROOT);
+    }
+
+    public static FIFOPageReplacement.Result toFifoResult(Result r) {
+        return new FIFOPageReplacement.Result(
+                r.snapshots, r.labels, r.faultsPerRow, r.changedIndexPerRow,
+                r.pagePerRow, r.frameCountFinal, r.totalFaults, r.totalHits
+        );
     }
 }

@@ -1,0 +1,2 @@
+principal.ClockPageReplacement$Result
+principal.ClockPageReplacement
