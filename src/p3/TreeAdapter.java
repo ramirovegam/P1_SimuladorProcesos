@@ -1,16 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package p3;
 
-/**
- *
- * @author RVega
- */
-
-// TreeAdapter.java
-import javax.swing.*;
+import javax.swing.JTree;
 import javax.swing.tree.*;
 
 public class TreeAdapter {
@@ -29,7 +20,7 @@ public class TreeAdapter {
         for (Directory d : dir.getSubDirs().values()) {
             node.add(buildNode(d));
         }
-        // archivos (como hojas)
+        // archivos (hojas)
         for (FileItem f : dir.getFiles().values()) {
             node.add(new DefaultMutableTreeNode(f.getName()));
         }
@@ -40,15 +31,15 @@ public class TreeAdapter {
         for (int i = 0; i < tree.getRowCount(); i++) tree.expandRow(i);
     }
 
-    // Selección por path: /home/ramiro  -> ["", "home", "ramiro"]
+    /** Seleccionar nodo del JTree por path (p.ej. /home/ramiro) */
     private static void selectPath(JTree tree, String path) {
-        String[] parts = path.equals("/") ? new String[]{"/"} : path.split("/");
-        TreeNode node = (TreeNode) tree.getModel().getRoot();
-        TreePath tp = new TreePath(node);
+        TreeNode root = (TreeNode) tree.getModel().getRoot();
+        TreePath tp = new TreePath(root);
         if (path.equals("/")) {
             tree.setSelectionPath(tp);
             return;
         }
+        String[] parts = path.split("/");
         TreePath currentPath = tp;
         for (String part : parts) {
             if (part.isBlank() || part.equals("/")) continue;

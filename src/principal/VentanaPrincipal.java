@@ -30,6 +30,8 @@ import p1.scheduler.Planificador;
 import p1.scheduler.SJF;
 import p1.scheduler.SRTF;
 import p1.ui.GanttPanel;
+import p3.FileSystem;
+import p3.TreeAdapter;
 
 /**
  *
@@ -44,6 +46,23 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private List<String> listaPaginas;
     private javax.swing.JTextArea resultadosRemplazoArea;
 
+    
+    // === CLI del sistema de archivos ===
+    private FileSystem fs = new FileSystem();  // NO final, para poder reasignarlo en 'reset'
+    private boolean updatingTree = false;      // Flag anti-bucle al refrescar el JTree
+
+    // Consola: helper para imprimir líneas
+    private void log(String text) {
+        jTextAreaConsola.append(text + "\n");
+        jTextAreaConsola.setCaretPosition(jTextAreaConsola.getDocument().getLength());
+    }
+
+    // Consola: helper para mostrar el prompt
+    private void prompt() {
+        log("simfs:" + fs.pwd() + "$ ");
+    }
+
+
     public VentanaPrincipal() {
         initComponents();
         initCustom();
@@ -52,6 +71,49 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void initCustom() {
+
+        // ---- Consola: limpiar y saludar ----
+        jTextAreaConsola.setEnabled(true);   // conserva tus colores/estilo
+        jTextAreaConsola.setEditable(false); // solo lectura
+        jTextAreaConsola.setText("");        // <-- limpia "Consola principal"
+        log("Bienvenido. Escribe 'help'.");
+        prompt();
+
+        // ---- Árbol inicial (ENVUELTO con flag anti-bucle) ----
+        updatingTree = true;
+        p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
+        updatingTree = false;
+
+        // ---- ENTER en la entrada = ejecutar comando ----
+        jTextFieldEntrada.addActionListener(e -> ejecutarComandoDesdeUI());
+
+        // ---- Selección del JTree = cambiar cwd (SIN refrescar el árbol aquí) ----
+        jTreeArbol.addTreeSelectionListener(e -> {
+            if (updatingTree) {
+                return; // ignora cambios programáticos (cuando setModel/selectPath)
+            }
+            javax.swing.tree.TreePath tp = e.getPath();
+            StringBuilder sb = new StringBuilder();
+            Object[] segs = tp.getPath();
+            for (Object o : segs) {
+                String s = o.toString();
+                if ("/".equals(s)) {
+                    continue; // raíz textual del JTree
+                }
+                if (sb.length() == 0) {
+                    sb.append("/").append(s);
+                } else {
+                    sb.append("/").append(s);
+                }
+            }
+            String target = sb.length() == 0 ? "/" : sb.toString();
+
+            String r = fs.cd(target);
+            log(r);
+            // NO refrescamos el árbol aquí para evitar el ciclo.
+            prompt();
+        });
+
         //----Simulador de planificacion----  
         // Modelo de la JTable
         modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
@@ -157,7 +219,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         jTreeArbol = new javax.swing.JTree();
         jTextFieldEntrada = new javax.swing.JTextField();
-        jPanel6 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -549,23 +610,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jTreeArbol.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jScrollPane4.setViewportView(jTreeArbol);
 
-        jTextFieldEntrada.setText("Entrada");
-
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 173, Short.MAX_VALUE)
-        );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-
-        jLabel10.setBackground(new java.awt.Color(102, 204, 255));
-        jLabel10.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(153, 204, 255));
-        jLabel10.setText("Directorio actual:");
+        jLabel10.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel10.setText("Ingresa el comando y presiona ENTER .....");
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -576,31 +622,27 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 521, Short.MAX_VALUE)
-                            .addComponent(jTextFieldEntrada))
-                        .addGap(18, 18, 18)
-                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(19, Short.MAX_VALUE))
+                    .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jTextFieldEntrada)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 677, Short.MAX_VALUE))
+                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(54, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addGap(65, 65, 65)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane3)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
-                .addGap(26, 26, 26)
-                .addComponent(jTextFieldEntrada, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(28, 28, 28)
+                .addGap(33, 33, 33)
                 .addComponent(jLabel10)
-                .addContainerGap(52, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jTextFieldEntrada, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(65, Short.MAX_VALUE))
         );
 
-        jTabbedPane4.addTab("sistema de archivo", jPanel5);
+        jTabbedPane4.addTab("Sistema de archivo", jPanel5);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -1170,6 +1212,63 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         }
     }
 
+    //3)----simulador de archivos---- 
+    
+    private void ejecutarComandoDesdeUI() {
+        // 1) Leer y validar entrada
+        String cmd = jTextFieldEntrada.getText().trim();
+        if (cmd.isEmpty()) return;
+
+        // 2) Comando especial: salir
+        if ("exit".equalsIgnoreCase(cmd)) {
+            System.exit(0);
+        }
+
+        // 3) Eco del comando en consola
+        log("> " + cmd);
+
+        // 4) Ejecutar en el motor (FileSystem)
+        p3.FileSystem.CommandResult res = fs.executeCommand(cmd);
+
+        // 5) Si el comando pidió limpiar la consola (clear)
+        if (res.clearConsole) {
+            jTextAreaConsola.setText("");
+        }
+
+        // 6) Mostrar la salida del comando (si trae texto)
+        if (res.output != null && !res.output.isEmpty()) {
+            log(res.output);
+        }
+
+        // 7) Si el comando pidió reiniciar (reset): nuevo FS + refrescar árbol
+        if (res.requestReset) {
+            // Reinstanciar el motor (fs NO debe ser final)
+            fs = new p3.FileSystem();
+
+            // Refrescar el árbol con flag anti-bucle
+            updatingTree = true;
+            p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
+            updatingTree = false;
+
+            // Reimprimir el prompt del nuevo estado
+            prompt();
+
+        } else {
+            // 8) Si no hubo reset, pero hay que refrescar el árbol (mkdir/rm/cd)
+            if (res.refreshTree) {
+                updatingTree = true;
+                p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
+                updatingTree = false;
+            }
+            // 9) Prompt normal
+            prompt();
+        }
+
+        // 10) Limpiar la caja de entrada
+        jTextFieldEntrada.setText("");
+    }
+
+    
     /**
      * @param args the command line arguments
      */
@@ -1224,7 +1323,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanelResultadosRemplazo;
     private javax.swing.JButton jRepetir;
     private javax.swing.JScrollPane jScrollPane;

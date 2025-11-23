@@ -1,18 +1,8 @@
+
 package p3;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
-/**
- *
- * @author RVega
- */
-
-// Directory.java
-import java.util.*;
-import p3.FileItem;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Directory {
     private final String name;
