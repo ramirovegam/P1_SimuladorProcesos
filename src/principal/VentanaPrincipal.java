@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -21,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import p1.engine.SimulationResult;
@@ -46,7 +48,15 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private List<String> listaPaginas;
     private javax.swing.JTextArea resultadosRemplazoArea;
 
-    
+    private enum ModoArchivos {
+        FS, ORGANIZACION
+    }
+    private ModoArchivos modoArchivos = ModoArchivos.ORGANIZACION; // o FS si prefieres
+
+    // --- Panel de archivos en memoria ---
+    private javax.swing.JScrollPane jScrollPaneArchivosMemoria;
+    private javax.swing.JTable jTableArchivosMemoria;
+
     // === CLI del sistema de archivos ===
     private FileSystem fs = new FileSystem();  // NO final, para poder reasignarlo en 'reset'
     private boolean updatingTree = false;      // Flag anti-bucle al refrescar el JTree
@@ -62,7 +72,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         log("simfs:" + fs.pwd() + "$ ");
     }
 
-
     public VentanaPrincipal() {
         initComponents();
         initCustom();
@@ -71,32 +80,66 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void initCustom() {
-
-        // ---- Consola: limpiar y saludar ----
-        jTextAreaConsola.setEnabled(true);   // conserva tus colores/estilo
-        jTextAreaConsola.setEditable(false); // solo lectura
-        jTextAreaConsola.setText("");        // <-- limpia "Consola principal"
+        // --- Consola: limpiar y saludar ---
+        jTextAreaConsola.setEnabled(true);
+        jTextAreaConsola.setEditable(false);
+        jTextAreaConsola.setText("");
         log("Bienvenido. Escribe 'help'.");
         prompt();
 
-        // ---- Árbol inicial (ENVUELTO con flag anti-bucle) ----
+        // --- Árbol inicial (con flag anti-bucle) ---
         updatingTree = true;
         p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
         updatingTree = false;
 
-        // ---- ENTER en la entrada = ejecutar comando ----
+        // --- Renderer para íconos (carpeta vs archivo) basado en FsNode ---
+        jTreeArbol.setCellRenderer(new javax.swing.tree.DefaultTreeCellRenderer() {
+            @Override
+            public java.awt.Component getTreeCellRendererComponent(
+                    javax.swing.JTree tree, Object value, boolean sel, boolean expanded,
+                    boolean leaf, int row, boolean hasFocus) {
+
+                java.awt.Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+                if (value instanceof javax.swing.tree.DefaultMutableTreeNode) {
+                    Object userObj = ((javax.swing.tree.DefaultMutableTreeNode) value).getUserObject();
+                    if (userObj instanceof p3.TreeAdapter.FsNode) {
+                        p3.TreeAdapter.FsNode node = (p3.TreeAdapter.FsNode) userObj;
+                        if (node.isDirectory) {
+                            setIcon(javax.swing.UIManager.getIcon("FileView.directoryIcon")); // ícono carpeta
+                        } else {
+                            setIcon(javax.swing.UIManager.getIcon("FileView.fileIcon")); // ícono archivo
+                        }
+                    }
+                }
+                return c;
+            }
+        });
+
+        // --- ENTER en la entrada = ejecutar comando ---
         jTextFieldEntrada.addActionListener(e -> ejecutarComandoDesdeUI());
 
-        // ---- Selección del JTree = cambiar cwd (SIN refrescar el árbol aquí) ----
+        // --- Selección del JTree = cambiar cwd (NO refrescar árbol aquí para evitar ciclo) ---
         jTreeArbol.addTreeSelectionListener(e -> {
             if (updatingTree) {
-                return; // ignora cambios programáticos (cuando setModel/selectPath)
+                return;
             }
             javax.swing.tree.TreePath tp = e.getPath();
             StringBuilder sb = new StringBuilder();
             Object[] segs = tp.getPath();
             for (Object o : segs) {
-                String s = o.toString();
+                String s;
+                // Recupera el nombre desde FsNode para evitar problemas con texto
+                if (o instanceof javax.swing.tree.DefaultMutableTreeNode) {
+                    Object uo = ((javax.swing.tree.DefaultMutableTreeNode) o).getUserObject();
+                    if (uo instanceof p3.TreeAdapter.FsNode) {
+                        s = ((p3.TreeAdapter.FsNode) uo).name;
+                    } else {
+                        s = o.toString();
+                    }
+                } else {
+                    s = o.toString();
+                }
                 if ("/".equals(s)) {
                     continue; // raíz textual del JTree
                 }
@@ -107,59 +150,98 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 }
             }
             String target = sb.length() == 0 ? "/" : sb.toString();
-
             String r = fs.cd(target);
             log(r);
-            // NO refrescamos el árbol aquí para evitar el ciclo.
+            // Prompt sin refrescar árbol aquí para evitar bucle
             prompt();
+            // Refresca panel de archivos (lista del directorio actual)
+            try {
+                refreshArchivosMemoriaPanel();
+            } catch (Exception ignore) {
+            }
         });
 
-        //----Simulador de planificacion----  
-        // Modelo de la JTable
+        // --- Simulador de planificación (tu código existente) ---
         modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
-        // Limpia filas nulas generadas por default (si las hay)
         modeloTabla.setRowCount(0);
-        // Asegura cabeceras correctas
         if (modeloTabla.getColumnCount() < 3) {
             modeloTabla.setColumnCount(3);
         }
         modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
-        // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
+        gantt.setPreferredSize(new Dimension(600, 200));
         panelGantt.setLayout(new BorderLayout());
         panelGantt.add(gantt, BorderLayout.CENTER);
         panelGantt.revalidate();
         panelGantt.repaint();
 
-        //---Simulador de Remplazo Paguinas---
-        // === Inicializa la tabla de Paguinas (letras) ===
-        javax.swing.table.DefaultTableModel modeloPaguinas = new javax.swing.table.DefaultTableModel(
-                new Object[]{"Paguina"}, 0
-        );
-        jTablePaguinas.setModel(modeloPaguinas);
+        // --- Panel de archivos (memoria): crear dinámicamente para evitar NPE ---
+        // Si usas el diseñador y ya existe jTableArchivosMemoria, NO creamos otra; si es null, la creamos.
+        if (jTableArchivosMemoria == null) {
+            jPanelArchivosMemoria.setLayout(new java.awt.BorderLayout());
 
-        // (Opcional) ancho amigable
-        jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
+            jTableArchivosMemoria = new javax.swing.JTable(new javax.swing.table.DefaultTableModel(
+                    new Object[][]{},
+                    // Columnas pensadas para "vista organización" (puedes cambiarlas a FS si prefieres)
+                    new String[]{"Archivo", "Clave", "Org Info", "Tamaño", "Preview"}
+            ) {
+                @Override
+                public boolean isCellEditable(int row, int col) {
+                    return false;
+                }
+            });
 
-        // Resultados de reemplazo
-        jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
-        jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
-        jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
+            jTableArchivosMemoria.setRowHeight(22);
+            jTableArchivosMemoria.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-        resultadosRemplazoArea = new javax.swing.JTextArea();
-        resultadosRemplazoArea.setEditable(false);
-        resultadosRemplazoArea.setLineWrap(true);
-        resultadosRemplazoArea.setWrapStyleWord(true);
-        resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
-        resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
-        resultadosRemplazoArea.setColumns(50);
-        resultadosRemplazoArea.setRows(6);
+            javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(jTableArchivosMemoria);
+            jPanelArchivosMemoria.add(scroll, java.awt.BorderLayout.CENTER);
 
-        javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
-        resultadosScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        resultadosScroll.getViewport().addChangeListener(e
-                -> resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
-        );
-        jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
+            // Ajuste dinámico de columnas al redimensionar el panel
+            jPanelArchivosMemoria.addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentResized(java.awt.event.ComponentEvent e) {
+                    try {
+                        int width = jPanelArchivosMemoria.getWidth();
+                        if (width > 0 && jTableArchivosMemoria.getColumnModel().getColumnCount() >= 5) {
+                            int col0 = (int) (width * 0.20); // Archivo
+                            int col1 = (int) (width * 0.15); // Clave
+                            int col2 = (int) (width * 0.20); // Org Info
+                            int col3 = (int) (width * 0.10); // Tamaño
+                            int col4 = width - col0 - col1 - col2 - col3 - 60; // Preview
+                            jTableArchivosMemoria.getColumnModel().getColumn(0).setPreferredWidth(col0);
+                            jTableArchivosMemoria.getColumnModel().getColumn(1).setPreferredWidth(col1);
+                            jTableArchivosMemoria.getColumnModel().getColumn(2).setPreferredWidth(col2);
+                            jTableArchivosMemoria.getColumnModel().getColumn(3).setPreferredWidth(col3);
+                            jTableArchivosMemoria.getColumnModel().getColumn(4).setPreferredWidth(col4);
+                        }
+                    } catch (Exception ignore) {
+                    }
+                }
+            });
+        } else {
+            // Si la tabla ya existe (viene del diseñador), asegúrate de que el panel tenga BorderLayout y la tabla esté dentro de un JScrollPane
+            if (!(jPanelArchivosMemoria.getLayout() instanceof java.awt.BorderLayout)) {
+                jPanelArchivosMemoria.setLayout(new java.awt.BorderLayout());
+            }
+            // Si la tabla no tiene scroll, lo agregamos
+            boolean tieneScroll = false;
+            for (java.awt.Component comp : jPanelArchivosMemoria.getComponents()) {
+                if (comp instanceof javax.swing.JScrollPane) {
+                    tieneScroll = true;
+                    break;
+                }
+            }
+            if (!tieneScroll) {
+                javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(jTableArchivosMemoria);
+                jPanelArchivosMemoria.add(scroll, java.awt.BorderLayout.CENTER);
+            }
+        }
+
+        // --- Primer llenado del panel de archivos ---
+        try {
+            refreshArchivosMemoriaPanel();
+        } catch (Exception ignore) {
+        }
     }
 
     /**
@@ -220,6 +302,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jTreeArbol = new javax.swing.JTree();
         jTextFieldEntrada = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
+        jPanelArchivosMemoria = new javax.swing.JPanel();
+        crearAleatorio = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -613,6 +697,26 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         jLabel10.setForeground(new java.awt.Color(255, 255, 255));
         jLabel10.setText("Ingresa el comando y presiona ENTER .....");
 
+        javax.swing.GroupLayout jPanelArchivosMemoriaLayout = new javax.swing.GroupLayout(jPanelArchivosMemoria);
+        jPanelArchivosMemoria.setLayout(jPanelArchivosMemoriaLayout);
+        jPanelArchivosMemoriaLayout.setHorizontalGroup(
+            jPanelArchivosMemoriaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 258, Short.MAX_VALUE)
+        );
+        jPanelArchivosMemoriaLayout.setVerticalGroup(
+            jPanelArchivosMemoriaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 409, Short.MAX_VALUE)
+        );
+
+        crearAleatorio.setBackground(new java.awt.Color(51, 153, 0));
+        crearAleatorio.setForeground(new java.awt.Color(255, 255, 255));
+        crearAleatorio.setText("crear aleatorio");
+        crearAleatorio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                crearAleatorioActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -622,24 +726,33 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jTextFieldEntrada)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 677, Short.MAX_VALUE))
-                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(crearAleatorio)
+                            .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(jTextFieldEntrada)
+                                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jPanelArchivosMemoria, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addGap(65, 65, 65)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane3)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
-                .addGap(33, 33, 33)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jScrollPane3)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
+                    .addComponent(jPanelArchivosMemoria, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel10)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jTextFieldEntrada, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(crearAleatorio)
+                .addContainerGap(39, Short.MAX_VALUE))
         );
 
         jTabbedPane4.addTab("sistema de archivo", jPanel5);
@@ -1075,6 +1188,62 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
     }//GEN-LAST:event_jButtonInfoAlgorimoActionPerformed
 
+    private void crearAleatorioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearAleatorioActionPerformed
+        // TODO add your handling code here:
+        // Generador de datos aleatorios
+        java.util.Random rnd = new java.util.Random();
+
+        // Número de alumno (clave)
+        String noAlumno = String.format("%04d", rnd.nextInt(9999));
+
+        // Nombre y apellidos aleatorios
+        String[] nombres = {"Juan", "Ana", "Luis", "María", "Pedro", "Sofía", "Carlos", "Lucía"};
+        String[] apellidos = {"Pérez", "García", "López", "Martínez", "Hernández", "Ramírez"};
+        String nombre = nombres[rnd.nextInt(nombres.length)];
+        String apPat = apellidos[rnd.nextInt(apellidos.length)];
+        String apMat = apellidos[rnd.nextInt(apellidos.length)];
+
+        // Teléfono aleatorio
+        String telefono = "55" + (10000000 + rnd.nextInt(89999999));
+
+        // Calle y código postal
+        String calle = "Calle " + (rnd.nextInt(200) + 1);
+        String codigoPostal = String.format("%05d", rnd.nextInt(99999));
+
+        // Crear registro
+        p3.StudentRecord r = new p3.StudentRecord(noAlumno, nombre, apPat, apMat, telefono, calle, codigoPostal);
+
+        // Insertar en organización actual
+        fs.executeCommand(String.format(
+                "insertalumno %s \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"",
+                noAlumno, nombre, apPat, apMat, telefono, calle, codigoPostal
+        ));
+
+        // Crear archivo en el directorio actual (no en /alumnos)
+        String fileName = "alumno_" + noAlumno + ".txt";
+        String contenido = String.join("\n",
+                "no=" + noAlumno,
+                "nombre=" + nombre,
+                "apellidoPaterno=" + apPat,
+                "apellidoMaterno=" + apMat,
+                "telefono=" + telefono,
+                "calle=" + calle,
+                "codigoPostal=" + codigoPostal
+        );
+        fs.echoToFile(contenido, fileName, false);
+
+        // Refrescar árbol y panel
+        updatingTree = true;
+        p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
+        updatingTree = false;
+        refreshArchivosMemoriaPanel();
+
+        // Mostrar mensaje en consola
+        log("Alumno aleatorio creado: " + noAlumno + " (" + nombre + " " + apPat + ")");
+        prompt();
+
+    }//GEN-LAST:event_crearAleatorioActionPerformed
+
 //1)----Algotimos de Planificaion----
     private List<Proceso> leerProcesosDeTabla() {
         List<Proceso> lista = new ArrayList<>();
@@ -1213,11 +1382,12 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     //3)----simulador de archivos---- 
-    
     private void ejecutarComandoDesdeUI() {
         // 1) Leer y validar entrada
         String cmd = jTextFieldEntrada.getText().trim();
-        if (cmd.isEmpty()) return;
+        if (cmd.isEmpty()) {
+            return;
+        }
 
         // 2) Comando especial: salir
         if ("exit".equalsIgnoreCase(cmd)) {
@@ -1227,48 +1397,305 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         // 3) Eco del comando en consola
         log("> " + cmd);
 
-        // 4) Ejecutar en el motor (FileSystem)
-        p3.FileSystem.CommandResult res = fs.executeCommand(cmd);
+        try {
+            // 4) Ejecutar en el motor (FileSystem)
+            p3.FileSystem.CommandResult res = fs.executeCommand(cmd);
 
-        // 5) Si el comando pidió limpiar la consola (clear)
-        if (res.clearConsole) {
-            jTextAreaConsola.setText("");
-        }
+            // 5) Si el comando pidió limpiar la consola (clear)
+            if (res.clearConsole) {
+                jTextAreaConsola.setText("");
+            }
 
-        // 6) Mostrar la salida del comando (si trae texto)
-        if (res.output != null && !res.output.isEmpty()) {
-            log(res.output);
-        }
+            // 6) Mostrar la salida del comando (si trae texto)
+            if (res.output != null && !res.output.isEmpty()) {
+                log(res.output);
+            }
 
-        // 7) Si el comando pidió reiniciar (reset): nuevo FS + refrescar árbol
-        if (res.requestReset) {
-            // Reinstanciar el motor (fs NO debe ser final)
-            fs = new p3.FileSystem();
+            // 7) Manejo de reset vs refresco normal
+            if (res.requestReset) {
+                // Reinstanciar el motor
+                fs = new p3.FileSystem();
 
-            // Refrescar el árbol con flag anti-bucle
-            updatingTree = true;
-            p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
-            updatingTree = false;
-
-            // Reimprimir el prompt del nuevo estado
-            prompt();
-
-        } else {
-            // 8) Si no hubo reset, pero hay que refrescar el árbol (mkdir/rm/cd)
-            if (res.refreshTree) {
+                // Refrescar el árbol con flag anti-bucle
                 updatingTree = true;
                 p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
                 updatingTree = false;
-            }
-            // 9) Prompt normal
-            prompt();
-        }
 
-        // 10) Limpiar la caja de entrada
-        jTextFieldEntrada.setText("");
+                // Prompt del nuevo estado
+                prompt();
+
+                // Refrescar panel de archivos
+                try {
+                    refreshArchivosMemoriaPanel();
+                } catch (Exception ignore) {
+                }
+            } else {
+                // Si hay que refrescar el árbol (mkdir/rm/cd/insertalumno que cambia FS)
+                if (res.refreshTree) {
+                    updatingTree = true;
+                    p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
+                    updatingTree = false;
+                }
+
+                // Prompt normal
+                prompt();
+
+                // Refrescar panel de archivos SIEMPRE (tras cualquier comando)
+                try {
+                    refreshArchivosMemoriaPanel();
+                } catch (Exception ignore) {
+                }
+            }
+        } catch (Exception ex) {
+            // Captura cualquier falla inesperada para no romper la UI
+            ex.printStackTrace();
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Error al ejecutar el comando:\n" + ex.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+        } finally {
+            // 10) Limpiar la caja de entrada
+            jTextFieldEntrada.setText("");
+        }
     }
 
-    
+
+// Modo de vista (si quieres alternar FS/Organización; aquí asumimos organización)
+
+private void refreshArchivosMemoriaPanel() {
+    if (jTableArchivosMemoria == null) return;
+
+    javax.swing.table.DefaultTableModel model =
+        (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
+
+    // NO cambies columnas aquí; ya están en initCustom()
+    model.setRowCount(0);
+
+    // Directorio actual y archivos
+    p3.Directory dirActual = fs.getCurrent();
+    java.util.List<p3.FileItem> archivos = new java.util.ArrayList<>(dirActual.getFiles().values());
+    archivos.sort(java.util.Comparator.comparing(p3.FileItem::getName));
+
+    boolean pobladoPorOrganizacion = false;
+
+    if (modoArchivos == ModoArchivos.ORGANIZACION) {
+        p3.FileOrganization org = fs.getCurrentOrg();
+        if (org != null) {
+            String showText;
+            try { showText = org.show(); } catch (Exception ex) { showText = null; }
+
+            java.util.List<String> ordenClaves = extraerClavesDeShow(showText);
+            if (!ordenClaves.isEmpty()) {
+                for (String clave : ordenClaves) {
+                    p3.FileItem archivo = buscarArchivoPorClave(archivos, clave);
+                    String nombreArchivo = (archivo != null) ? archivo.getName() : "(sin archivo)";
+                    String contenido = (archivo != null && archivo.getContent() != null) ? archivo.getContent() : "";
+                    String preview = contenido.replace("\n", " ");
+                    if (preview.length() > 100) preview = preview.substring(0, 100) + "...";
+                    int size = contenido.length();
+
+                    String orgInfo = etiquetaOrganizacion(org, clave, showText);
+                    model.addRow(new Object[]{nombreArchivo, clave, orgInfo, size, preview});
+                }
+                pobladoPorOrganizacion = true;
+            }
+        }
+    }
+
+    // Fallback — si la organización no pudo poblar filas, muestra archivos del directorio actual
+    if (!pobladoPorOrganizacion) {
+        for (p3.FileItem f : archivos) {
+            String contenido = f.getContent();
+            String preview = (contenido == null) ? "" : contenido.replace("\n", " ");
+            if (preview.length() > 100) preview = preview.substring(0, 100) + "...";
+            int size = (contenido == null) ? 0 : contenido.length();
+            String clave = extraerClaveDesdeContenido(contenido);
+            String orgInfo = (modoArchivos == ModoArchivos.ORGANIZACION) ? "(sin orden org)" : "";
+            model.addRow(new Object[]{f.getName(), clave, orgInfo, size, preview});
+        }
+    }
+
+    // Aplicar RowSorter para ver el orden en la UI según organización (cosmético)
+    applyRowSorterPorOrganizacion();
+}
+
+private void applyRowSorterPorOrganizacion() {
+    if (jTableArchivosMemoria == null) return;
+    javax.swing.table.DefaultTableModel tm =
+        (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
+
+    javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter =
+        new javax.swing.table.TableRowSorter<>(tm);
+
+    jTableArchivosMemoria.setRowSorter(sorter);
+
+    p3.FileOrganization org = fs.getCurrentOrg();
+    if (org == null) {
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+        return;
+    }
+    String type = org.getClass().getSimpleName();
+
+    if (type.contains("Hash")) {
+        // Orden por bucket (columna 2 "Org Info": "Hash bkt=<n>")
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(2, javax.swing.SortOrder.ASCENDING)));
+    } else if (type.contains("SecuencialIndexado")) {
+        // Si orgInfo es "SecIndex pos=<n>", puedes extraer el número con un comparator custom;
+        // de forma simple, ordena por Clave (col 1).
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
+    } else if (type.contains("Secuencial")) {
+        // Orden por clave (col 1)
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
+    } else if (type.contains("Pile")) {
+        // Pile: ya poblamos en orden de inserción, aquí no ordenamos (o por nombre de archivo)
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+    } else {
+        // Indexado/otros: por nombre de archivo
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+    }
+}
+
+// ===== Helpers de mapeo/parseo =====
+private p3.FileItem buscarArchivoPorClave(java.util.List<p3.FileItem> archivos, String clave) {
+    if (clave == null) return null;
+    for (p3.FileItem f : archivos) {
+        String c = f.getContent();
+        if (c != null && c.contains("no=" + clave)) return f;
+    }
+    return null;
+}
+
+private String extraerClaveDesdeContenido(String contenido) {
+    if (contenido == null) return null;
+    int p = contenido.indexOf("no=");
+    if (p >= 0) {
+        int end = contenido.indexOf("\n", p);
+        String line = (end > p) ? contenido.substring(p, end) : contenido.substring(p);
+        int eq = line.indexOf('=');
+        if (eq >= 0 && eq + 1 < line.length()) {
+            return line.substring(eq + 1).trim();
+        }
+    }
+    return null;
+}
+
+/** Extrae claves en el orden que muestra org.show() */
+private java.util.List<String> extraerClavesDeShow(String showText) {
+    java.util.List<String> out = new java.util.ArrayList<>();
+    if (showText == null) return out;
+    String[] lines = showText.split("\n");
+    for (String ln : lines) {
+        int p = ln.indexOf("no=");
+        if (p >= 0) {
+            int end = ln.indexOf(",", p);
+            String segment = (end > p) ? ln.substring(p, end) : ln.substring(p);
+            int eq = segment.indexOf('=');
+            if (eq >= 0 && eq + 1 < segment.length()) {
+                String clave = segment.substring(eq + 1).trim();
+                if (!clave.isEmpty()) out.add(clave);
+            }
+        }
+    }
+    return out;
+}
+
+private String etiquetaOrganizacion(p3.FileOrganization org, String clave, String showText) {
+    String type = (org == null) ? "" : org.getClass().getSimpleName();
+    if (type.contains("Pile")) return "Pile (inserción)";
+    if (type.contains("SecuencialIndexado")) {
+        Integer pos = extraerPosicionDeIndice(showText, clave);
+        return (pos != null) ? ("SecIndex pos=" + pos) : "SecIndex";
+    }
+    if (type.contains("Secuencial")) return "Secuencial (orden clave)";
+    if (type.contains("Indexado")) return "Indexado (map)";
+    if (type.contains("Hash")) {
+        int M = 97;
+        int bucket = (clave != null) ? Math.floorMod(clave.hashCode(), M) : -1;
+        return (bucket >= 0) ? ("Hash bkt=" + bucket) : "Hash";
+    }
+    return "Org";
+}
+
+private Integer extraerPosicionDeIndice(String showText, String clave) {
+    if (showText == null || clave == null) return null;
+    int iStart = showText.indexOf("Índice");
+    if (iStart < 0) return null;
+    int braceStart = showText.indexOf("{", iStart);
+    int braceEnd = showText.indexOf("}", iStart);
+    if (braceStart >= 0 && braceEnd > braceStart) {
+        String inside = showText.substring(braceStart + 1, braceEnd);
+        String[] entries = inside.split(",");
+        for (String e : entries) {
+            String[] kv = e.trim().split("=");
+            if (kv.length == 2) {
+                String key = kv[0].trim();
+                if (clave.equals(key)) {
+                    try { return Integer.parseInt(kv[1].trim()); }
+                    catch (NumberFormatException ignore) {}
+                }
+            }
+        }
+    }
+    return null;
+}
+
+
+
+    private int indexOf(java.util.List<String> list, String key) {
+        for (int i = 0; i < list.size(); i++) {
+            if (key.equals(list.get(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private Map<String, Integer> extraerPosicionesDeSecIndexShow(String showText) {
+        // El show() de SecuencialIndexado muestra "Registros:\n ..." y "Índice (key->pos): { ... }"
+        Map<String, Integer> pos = new java.util.HashMap<>();
+        if (showText == null) {
+            return pos;
+        }
+        int iStart = showText.indexOf("Índice");
+        if (iStart < 0) {
+            return pos;
+        }
+        int braceStart = showText.indexOf("{", iStart);
+        int braceEnd = showText.indexOf("}", iStart);
+        if (braceStart >= 0 && braceEnd > braceStart) {
+            String inside = showText.substring(braceStart + 1, braceEnd);
+            String[] entries = inside.split(",");
+            for (String e : entries) {
+                String[] kv = e.trim().split("=");
+                if (kv.length == 2) {
+                    String key = kv[0].trim();
+                    try {
+                        Integer v = Integer.parseInt(kv[1].trim());
+                        pos.put(key, v);
+                    } catch (NumberFormatException ignore) {
+                    }
+                }
+            }
+        }
+        return pos;
+    }
+
+    private p3.FileOrganization getCurrentOrg() {
+        // acceso a la organización actual; si no la tienes expuesta, puedes mantener referencia al cambiar setorg
+        // en este ejemplo asumimos acceso por fs (puedes agregar un getter en FileSystem si no lo tienes)
+        try {
+            java.lang.reflect.Field f = p3.FileSystem.class.getDeclaredField("currentOrg");
+            f.setAccessible(true);
+            return (p3.FileOrganization) f.get(fs);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+
+
     /**
      * @param args the command line arguments
      */
@@ -1299,6 +1726,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField cpuBurst;
+    private javax.swing.JButton crearAleatorio;
     private javax.swing.JButton jButtonInfoAlgorimo;
     private javax.swing.JButton jButtonLimpiarTodo;
     private javax.swing.JButton jButtonRUNRemplazo;
@@ -1323,6 +1751,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanelArchivosMemoria;
     private javax.swing.JPanel jPanelResultadosRemplazo;
     private javax.swing.JButton jRepetir;
     private javax.swing.JScrollPane jScrollPane;

@@ -3,30 +3,23 @@ package p3;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.*;
 
-/**
- * Motor del simulador de sistema de archivos + organización de registros de alumnos.
- * Devuelve CommandResult con flags para que la UI (Swing) decida si refrescar árbol, limpiar consola o reiniciar.
- */
 public class FileSystem {
-    // --- Sistema de archivos básico ---
+
     private final Directory root = new Directory("/");
     private Directory current = root;
-
-    // --- Organización de archivos para alumnos (por defecto: Pile) ---
     private FileOrganization currentOrg = new PileOrganization();
 
-    public FileSystem() {
-        // Sistema vacío por defecto (solo "/").
-        // Si quieres iniciar con /home:
-        // mkdirInternal(root, "home");
-    }
+    public FileSystem() {}
 
-    // === API del FS (usada por CLI) ===
+    // ==== Getters =====
     public Directory getRoot() { return root; }
     public Directory getCurrent() { return current; }
     public String pwd() { return current.getPath(); }
+    public FileOrganization getCurrentOrg() { return currentOrg; }
 
+    // ==== FS básico =====
     public String ls() {
         StringBuilder sb = new StringBuilder();
         sb.append("Directorios: ").append(current.getSubDirs().keySet()).append("\n");
@@ -54,7 +47,7 @@ public class FileSystem {
 
     public boolean touch(String name) {
         if (name == null || name.isBlank()) return false;
-        if (current.getFiles().containsKey(name)) return true; // ya existe
+        if (current.getFiles().containsKey(name)) return true;
         current.getFiles().put(name, new FileItem(name));
         return true;
     }
@@ -74,7 +67,7 @@ public class FileSystem {
 
     public String echoToFile(String text, String name, boolean append) {
         FileItem f = current.getFiles().get(name);
-        if (f == null) { // crea si no existe
+        if (f == null) {
             f = new FileItem(name);
             current.getFiles().put(name, f);
         }
@@ -96,12 +89,12 @@ public class FileSystem {
         return "ERROR: no existe " + name;
     }
 
-    // === Resultado para la UI ===
+    // ==== Resultado para la UI =====
     public static class CommandResult {
         public final String output;
         public final boolean refreshTree;
-        public final boolean clearConsole;  // limpiar consola en UI
-        public final boolean requestReset;  // reiniciar FS y consola en UI
+        public final boolean clearConsole;
+        public final boolean requestReset;
 
         public CommandResult(String out, boolean refreshTree) {
             this(out, refreshTree, false, false);
@@ -114,9 +107,8 @@ public class FileSystem {
         }
     }
 
-    // === Comandos de la CLI ===
+    // ==== CLI =====
     public CommandResult executeCommand(String cmdLine) {
-        // echo "texto" > archivo / echo "texto" >> archivo
         if (cmdLine.startsWith("echo ")) {
             return parseEcho(cmdLine);
         }
@@ -129,12 +121,8 @@ public class FileSystem {
         String cmd = parts[0];
         switch (cmd) {
             // --- Comandos FS ---
-            case "pwd":
-                return new CommandResult(pwd(), false);
-
-            case "ls":
-                return new CommandResult(ls(), false);
-
+            case "pwd": return new CommandResult(pwd(), false);
+            case "ls": return new CommandResult(ls(), false);
             case "mkdir":
                 if (parts.length < 2) return new CommandResult("Uso: mkdir <nombre>", false);
                 if (dirExists(parts[1])) return new CommandResult("ERROR: ya existe el directorio " + parts[1], false);
@@ -156,36 +144,35 @@ public class FileSystem {
                 return new CommandResult(cat(parts[1]), false);
 
             case "rm":
-                if (parts.length < 2) return new CommandResult("Uso: rm <archivo|directorio>", false);
+                if (parts.length < 2) return new CommandResult("Uso: rm <archivo|dir>", false);
                 String rmr = rm(parts[1]);
                 boolean refresh = rmr.startsWith("OK");
                 return new CommandResult(rmr, refresh);
 
-            case "help":
-                return new CommandResult(helpText(), false);
+            case "help": return new CommandResult(helpText(), false);
+            case "clear": return new CommandResult("", false, true, false);
+            case "reset": return new CommandResult("Simulador reiniciado (FS y consola).", true, true, true);
 
-            // --- Limpieza y reinicio de la UI/FS ---
-            case "clear":
-                // Pide a la UI limpiar la consola; no toca el FS
-                return new CommandResult("", false, true, false);
+            // --- Organización (alumnos) ---
+            case "setorg": {
+                if (parts.length < 2) return new CommandResult("Uso: setorg <pile|sec|sec_index|indexado|hash>", false);
 
-            case "reset":
-                // Pide a la UI limpiar consola y reiniciar FS (nuevo objeto en UI)
-                return new CommandResult("Simulador reiniciado (FS y consola).", true, true, true);
-
-            // --- Organización de archivos (alumnos) ---
-            case "setorg":
-                if (parts.length < 2)
-                    return new CommandResult("Uso: setorg <pile|sec|sec_index|indexado|hash>", false);
+                FileOrganization nueva;
                 switch (parts[1].toLowerCase()) {
-                    case "pile":        currentOrg = new PileOrganization(); break;
-                    case "sec":         currentOrg = new SecuencialOrganization(); break;
-                    case "sec_index":   currentOrg = new SecuencialIndexadoOrganization(); break;
-                    case "indexado":    currentOrg = new IndexadoOrganization(); break;
-                    case "hash":        currentOrg = new HashOrganization(); break;
+                    case "pile":       nueva = new PileOrganization(); break;
+                    case "sec":        nueva = new SecuencialOrganization(); break;
+                    case "sec_index":  nueva = new SecuencialIndexadoOrganization(); break;
+                    case "indexado":   nueva = new IndexadoOrganization(); break;
+                    case "hash":       nueva = new HashOrganization(); break;
                     default: return new CommandResult("Organización no válida", false);
                 }
+
+                // Asignar y reconstruir la nueva organización con los archivos del directorio actual
+                currentOrg = nueva;
+                rebuildOrgFromCurrentDir();  // <-- clave para que org.show() no quede vacío
+
                 return new CommandResult("Organización cambiada a " + parts[1], false);
+            }
 
             case "insertalumno": {
                 // Formato: insertalumno <no> "<nombre>" "<apPat>" "<apMat>" "<tel>" "<calle>" "<cp>"
@@ -197,11 +184,16 @@ public class FileSystem {
                     );
                 }
                 StudentRecord r = new StudentRecord(
-                    args.get(1), args.get(2), args.get(3), args.get(4),
-                    args.get(5), args.get(6), args.get(7)
+                    args.get(1), args.get(2), args.get(3), args.get(4), args.get(5), args.get(6), args.get(7)
                 );
+
+                // Inserta en la organización activa
                 currentOrg.insert(r);
-                return new CommandResult("Insertado alumno no=" + r.noAlumno, false);
+
+                // Crea/actualiza archivo en el directorio actual
+                String fullPath = createAlumnoFile(r);
+
+                return new CommandResult("Insertado alumno no=" + r.noAlumno + " -> " + fullPath, true);
             }
 
             case "findalumno":
@@ -209,16 +201,13 @@ public class FileSystem {
                 StudentRecord f = currentOrg.find(parts[1]);
                 return new CommandResult(f != null ? f.toString() : "No encontrado", false);
 
-            case "showalumnos":
-                return new CommandResult(currentOrg.show(), false);
+            case "showalumnos": return new CommandResult(currentOrg.show(), false);
 
-            default:
-                return new CommandResult("Comando no reconocido. Usa 'help'.", false);
+            default: return new CommandResult("Comando no reconocido. Usa 'help'.", false);
         }
     }
 
-    // === Helpers internos ===
-
+    // ==== Helpers CLI =====
     private CommandResult parseEcho(String line) {
         String regex = "^echo\\s+\"(.*)\"\\s*(>>|>)\\s*(\\S+)$";
         Pattern p = Pattern.compile(regex);
@@ -236,30 +225,27 @@ public class FileSystem {
     private String helpText() {
         return String.join("\n",
             "Comandos FS:",
-            "  pwd                 - muestra directorio actual",
-            "  ls                  - lista contenido",
-            "  mkdir <nombre>      - crea directorio",
-            "  touch <nombre>      - crea archivo vacío",
-            "  cd <ruta>           - cambia directorio (., .., nombre, /absoluto)",
-            "  echo \"texto\" > f    - escribe (sobrescribe) en archivo",
-            "  echo \"texto\" >> f   - agrega al final",
-            "  cat <archivo>       - muestra contenido",
-            "  rm <archivo|dir>    - elimina (dir debe estar vacío)",
-            "  clear               - limpia la consola (UI)",
-            "  reset               - reinicia consola y sistema de archivos (UI + FS)",
+            " pwd - muestra directorio actual",
+            " ls - lista contenido",
+            " mkdir <nombre> - crea directorio",
+            " touch <nombre> - crea archivo vacío",
+            " cd <ruta> - cambia directorio",
+            " echo \"texto\" > f - escribe en archivo",
+            " cat <archivo> - muestra contenido",
+            " rm <archivo|dir> - elimina",
+            " clear - limpia consola",
+            " reset - reinicia FS",
             "",
-            "Organización de archivos (alumnos):",
-            "  setorg <pile|sec|sec_index|indexado|hash>",
-            "  insertalumno <no> \"<nombre>\" \"<apPat>\" \"<apMat>\" \"<tel>\" \"<calle>\" \"<cp>\"",
-            "  findalumno <no>",
-            "  showalumnos",
-            "",
-            "  help                - esta ayuda",
-            "  exit                - salir (lo maneja la UI)"
+            "Organización de alumnos:",
+            " setorg <pile|sec|sec_index|indexado|hash>",
+            " insertalumno <no> \"nombre\" \"apPat\" \"apMat\" \"tel\" \"calle\" \"cp\"",
+            " findalumno <no>",
+            " showalumnos",
+            " help - esta ayuda"
         );
     }
 
-    /** Resolver rutas simples (absolutas/relativas), con . y .. */
+    // ==== Resolución de rutas y parseo de args =====
     private Directory resolveDir(String path) {
         if (path == null || path.isBlank()) return current;
         Directory start = path.startsWith("/") ? root : current;
@@ -278,16 +264,80 @@ public class FileSystem {
         return cur;
     }
 
-    /** Parsea línea respetando argumentos entre comillas: insertalumno ... "Juan Carlos" ... */
     private java.util.List<String> parseQuotedArgs(String line) {
         java.util.List<String> out = new java.util.ArrayList<>();
         java.util.regex.Matcher m = java.util.regex.Pattern
-                .compile("\"([^\"]*)\"|(\\S+)")
-                .matcher(line);
+            .compile("\"([^\"]*)\"|(\\S+)")
+            .matcher(line);
         while (m.find()) {
-            if (m.group(1) != null) out.add(m.group(1));  // contenido entre comillas
-            else out.add(m.group(2));                     // token normal
+            if (m.group(1) != null) out.add(m.group(1));
+            else out.add(m.group(2));
         }
         return out;
+    }
+
+    // ==== Manejo de archivos alumno =====
+    private static String serializeRecord(StudentRecord r) {
+        return String.join("\n",
+            "no=" + r.noAlumno,
+            "nombre=" + r.nombre,
+            "apellidoPaterno=" + r.apellidoPaterno,
+            "apellidoMaterno=" + r.apellidoMaterno,
+            "telefono=" + r.telefono,
+            "calle=" + r.calle,
+            "codigoPostal=" + r.codigoPostal
+        );
+    }
+
+    private String createAlumnoFile(StudentRecord r) {
+        Directory targetDir = current; // directorio actual
+        String fname = "alumno_" + r.noAlumno + ".txt";
+        FileItem f = targetDir.getFiles().get(fname);
+        if (f == null) {
+            f = new FileItem(fname);
+            targetDir.getFiles().put(fname, f);
+        }
+        f.setContent(serializeRecord(r));
+        return targetDir.getPath() + "/" + fname;
+    }
+
+    // ==== Reconstrucción de organización desde archivos =====
+    private StudentRecord parseRecordFromFile(FileItem f) {
+        if (f == null || f.getContent() == null) return null;
+        String[] lines = f.getContent().split("\n");
+        java.util.Map<String,String> kv = new java.util.HashMap<>();
+        for (String ln : lines) {
+            int eq = ln.indexOf('=');
+            if (eq > 0) {
+                String k = ln.substring(0, eq).trim();
+                String v = ln.substring(eq + 1).trim();
+                kv.put(k, v);
+            }
+        }
+        String no = kv.get("no");
+        if (no == null || no.isEmpty()) return null;
+        return new StudentRecord(
+            no,
+            kv.getOrDefault("nombre", ""),
+            kv.getOrDefault("apellidoPaterno", ""),
+            kv.getOrDefault("apellidoMaterno", ""),
+            kv.getOrDefault("telefono", ""),
+            kv.getOrDefault("calle", ""),
+            kv.getOrDefault("codigoPostal", "")
+        );
+    }
+
+    /** Repuebla la organización activa con TODOS los archivos alumno_*.txt del directorio actual */
+    private void rebuildOrgFromCurrentDir() {
+        Directory dir = current;
+        for (FileItem f : dir.getFiles().values()) {
+            String name = f.getName().toLowerCase();
+            if (name.startsWith("alumno_") && name.endsWith(".txt")) {
+                StudentRecord r = parseRecordFromFile(f);
+                if (r != null) {
+                    currentOrg.insert(r);
+                }
+            }
+        }
     }
 }
