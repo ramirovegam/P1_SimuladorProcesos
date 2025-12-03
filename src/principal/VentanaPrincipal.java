@@ -80,66 +80,33 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     private void initCustom() {
-        // --- Consola: limpiar y saludar ---
-        jTextAreaConsola.setEnabled(true);
-        jTextAreaConsola.setEditable(false);
+        // ==========================
+        // Consola del sistema de archivos
+        // ==========================
+        jTextAreaConsola.setEnabled(true);      // conserva tus colores/estilo
+        jTextAreaConsola.setEditable(false);    // solo lectura
         jTextAreaConsola.setText("");
         log("Bienvenido. Escribe 'help'.");
         prompt();
 
-        // --- Árbol inicial (con flag anti-bucle) ---
+        // ==========================
+        // Árbol (JTree) del sistema de archivos
+        // ==========================
+        // Refresca el árbol inicial usando el flag anti-bucle para evitar ciclos
         updatingTree = true;
         p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
         updatingTree = false;
 
-        // --- Renderer para íconos (carpeta vs archivo) basado en FsNode ---
-        jTreeArbol.setCellRenderer(new javax.swing.tree.DefaultTreeCellRenderer() {
-            @Override
-            public java.awt.Component getTreeCellRendererComponent(
-                    javax.swing.JTree tree, Object value, boolean sel, boolean expanded,
-                    boolean leaf, int row, boolean hasFocus) {
-
-                java.awt.Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
-
-                if (value instanceof javax.swing.tree.DefaultMutableTreeNode) {
-                    Object userObj = ((javax.swing.tree.DefaultMutableTreeNode) value).getUserObject();
-                    if (userObj instanceof p3.TreeAdapter.FsNode) {
-                        p3.TreeAdapter.FsNode node = (p3.TreeAdapter.FsNode) userObj;
-                        if (node.isDirectory) {
-                            setIcon(javax.swing.UIManager.getIcon("FileView.directoryIcon")); // ícono carpeta
-                        } else {
-                            setIcon(javax.swing.UIManager.getIcon("FileView.fileIcon")); // ícono archivo
-                        }
-                    }
-                }
-                return c;
-            }
-        });
-
-        // --- ENTER en la entrada = ejecutar comando ---
-        jTextFieldEntrada.addActionListener(e -> ejecutarComandoDesdeUI());
-
-        // --- Selección del JTree = cambiar cwd (NO refrescar árbol aquí para evitar ciclo) ---
+        // Listener: al seleccionar un nodo del JTree, cambiar cwd (sin refrescar árbol aquí)
         jTreeArbol.addTreeSelectionListener(e -> {
             if (updatingTree) {
-                return;
+                return; // ignora cambios programáticos (cuando setModel/selectPath)
             }
             javax.swing.tree.TreePath tp = e.getPath();
             StringBuilder sb = new StringBuilder();
             Object[] segs = tp.getPath();
             for (Object o : segs) {
-                String s;
-                // Recupera el nombre desde FsNode para evitar problemas con texto
-                if (o instanceof javax.swing.tree.DefaultMutableTreeNode) {
-                    Object uo = ((javax.swing.tree.DefaultMutableTreeNode) o).getUserObject();
-                    if (uo instanceof p3.TreeAdapter.FsNode) {
-                        s = ((p3.TreeAdapter.FsNode) uo).name;
-                    } else {
-                        s = o.toString();
-                    }
-                } else {
-                    s = o.toString();
-                }
+                String s = o.toString();
                 if ("/".equals(s)) {
                     continue; // raíz textual del JTree
                 }
@@ -152,96 +119,78 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             String target = sb.length() == 0 ? "/" : sb.toString();
             String r = fs.cd(target);
             log(r);
-            // Prompt sin refrescar árbol aquí para evitar bucle
+            // NO refrescamos el árbol aquí para evitar el ciclo.
             prompt();
-            // Refresca panel de archivos (lista del directorio actual)
-            try {
-                refreshArchivosMemoriaPanel();
-            } catch (Exception ignore) {
-            }
         });
 
-        // --- Simulador de planificación (tu código existente) ---
+        // Listener: ENTER en la entrada de la consola ejecuta el comando
+        jTextFieldEntrada.addActionListener(e -> ejecutarComandoDesdeUI());
+
+        // ==========================
+        // Simulador de Planificación (procesos)
+        // ==========================
         modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
+        // Limpia filas nulas generadas por default (si las hay)
         modeloTabla.setRowCount(0);
+        // Asegura cabeceras correctas
         if (modeloTabla.getColumnCount() < 3) {
             modeloTabla.setColumnCount(3);
         }
         modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
+
+        // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
         gantt.setPreferredSize(new Dimension(600, 200));
         panelGantt.setLayout(new BorderLayout());
         panelGantt.add(gantt, BorderLayout.CENTER);
         panelGantt.revalidate();
         panelGantt.repaint();
 
-        // --- Panel de archivos (memoria): crear dinámicamente para evitar NPE ---
-        // Si usas el diseñador y ya existe jTableArchivosMemoria, NO creamos otra; si es null, la creamos.
-        if (jTableArchivosMemoria == null) {
-            jPanelArchivosMemoria.setLayout(new java.awt.BorderLayout());
-
-            jTableArchivosMemoria = new javax.swing.JTable(new javax.swing.table.DefaultTableModel(
-                    new Object[][]{},
-                    // Columnas pensadas para "vista organización" (puedes cambiarlas a FS si prefieres)
-                    new String[]{"Archivo", "Clave", "Org Info", "Tamaño", "Preview"}
-            ) {
-                @Override
-                public boolean isCellEditable(int row, int col) {
-                    return false;
-                }
-            });
-
-            jTableArchivosMemoria.setRowHeight(22);
-            jTableArchivosMemoria.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-
-            javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(jTableArchivosMemoria);
-            jPanelArchivosMemoria.add(scroll, java.awt.BorderLayout.CENTER);
-
-            // Ajuste dinámico de columnas al redimensionar el panel
-            jPanelArchivosMemoria.addComponentListener(new java.awt.event.ComponentAdapter() {
-                @Override
-                public void componentResized(java.awt.event.ComponentEvent e) {
-                    try {
-                        int width = jPanelArchivosMemoria.getWidth();
-                        if (width > 0 && jTableArchivosMemoria.getColumnModel().getColumnCount() >= 5) {
-                            int col0 = (int) (width * 0.20); // Archivo
-                            int col1 = (int) (width * 0.15); // Clave
-                            int col2 = (int) (width * 0.20); // Org Info
-                            int col3 = (int) (width * 0.10); // Tamaño
-                            int col4 = width - col0 - col1 - col2 - col3 - 60; // Preview
-                            jTableArchivosMemoria.getColumnModel().getColumn(0).setPreferredWidth(col0);
-                            jTableArchivosMemoria.getColumnModel().getColumn(1).setPreferredWidth(col1);
-                            jTableArchivosMemoria.getColumnModel().getColumn(2).setPreferredWidth(col2);
-                            jTableArchivosMemoria.getColumnModel().getColumn(3).setPreferredWidth(col3);
-                            jTableArchivosMemoria.getColumnModel().getColumn(4).setPreferredWidth(col4);
-                        }
-                    } catch (Exception ignore) {
-                    }
-                }
-            });
-        } else {
-            // Si la tabla ya existe (viene del diseñador), asegúrate de que el panel tenga BorderLayout y la tabla esté dentro de un JScrollPane
-            if (!(jPanelArchivosMemoria.getLayout() instanceof java.awt.BorderLayout)) {
-                jPanelArchivosMemoria.setLayout(new java.awt.BorderLayout());
+        // ==========================
+        // Algoritmos de reemplazo de página
+        // ==========================
+        // 1) Tabla de Paguinas (asegura un modelo con UNA columna)
+        javax.swing.table.DefaultTableModel modeloPaguinas
+                = new javax.swing.table.DefaultTableModel(new Object[]{"Paguina"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false; // no editable por el usuario
             }
-            // Si la tabla no tiene scroll, lo agregamos
-            boolean tieneScroll = false;
-            for (java.awt.Component comp : jPanelArchivosMemoria.getComponents()) {
-                if (comp instanceof javax.swing.JScrollPane) {
-                    tieneScroll = true;
-                    break;
-                }
-            }
-            if (!tieneScroll) {
-                javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(jTableArchivosMemoria);
-                jPanelArchivosMemoria.add(scroll, java.awt.BorderLayout.CENTER);
-            }
+        };
+        jTablePaguinas.setModel(modeloPaguinas);
+        // Opcional: ancho amigable
+        if (jTablePaguinas.getColumnModel().getColumnCount() > 0) {
+            jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
         }
 
-        // --- Primer llenado del panel de archivos ---
-        try {
-            refreshArchivosMemoriaPanel();
-        } catch (Exception ignore) {
+        // 2) Lista interna para secuencia (por si la usas en otros métodos)
+        if (listaPaginas == null) {
+            listaPaginas = new ArrayList<>();
         }
+
+        // 3) Área de resultados (texto) para mostrar resumen al terminar RUN
+        jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
+        jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
+        jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
+
+        resultadosRemplazoArea = new javax.swing.JTextArea();
+        resultadosRemplazoArea.setEditable(false);
+        resultadosRemplazoArea.setLineWrap(true);
+        resultadosRemplazoArea.setWrapStyleWord(true);
+        resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
+        resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
+        resultadosRemplazoArea.setColumns(50);
+        resultadosRemplazoArea.setRows(6);
+
+        javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
+        resultadosScroll.setHorizontalScrollBarPolicy(
+                javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        // Asegura que el área se expanda con el viewport
+        resultadosScroll.getViewport().addChangeListener(e
+                -> resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
+        );
+
+        jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
     }
 
     /**
@@ -897,18 +846,33 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jComboBoxAlgoritmosActionPerformed
 
     private void jButtonSubirPaguinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSubirPaguinaActionPerformed
+
         String page = (String) jComboBoxPaguina.getSelectedItem();
         if (page == null || page.isBlank()) {
             return;
         }
 
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+        javax.swing.table.DefaultTableModel model
+                = (javax.swing.table.DefaultTableModel) jTablePaguinas.getModel();
+
+        // Asegura que la tabla tiene al menos 1 columna para la paguina
+        if (model.getColumnCount() == 0) {
+            model.setColumnIdentifiers(new Object[]{"Paguina"});
+        }
+
+        // Agrega fila a la tabla
         model.addRow(new Object[]{page});
 
+        // Mantén la lista interna
         if (listaPaginas == null) {
             listaPaginas = new java.util.ArrayList<>();
         }
         listaPaginas.add(page.substring(0, 1).toUpperCase());
+
+        // Refresca visualmente (por si el LAF no repinta automático)
+        jTablePaguinas.revalidate();
+        jTablePaguinas.repaint();
+
     }//GEN-LAST:event_jButtonSubirPaguinaActionPerformed
 
     private void jButtonRUNRemplazoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNRemplazoActionPerformed
@@ -1461,187 +1425,219 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         }
     }
 
-
 // Modo de vista (si quieres alternar FS/Organización; aquí asumimos organización)
+    private void refreshArchivosMemoriaPanel() {
+        if (jTableArchivosMemoria == null) {
+            return;
+        }
 
-private void refreshArchivosMemoriaPanel() {
-    if (jTableArchivosMemoria == null) return;
+        javax.swing.table.DefaultTableModel model
+                = (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
 
-    javax.swing.table.DefaultTableModel model =
-        (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
+        // NO cambies columnas aquí; ya están en initCustom()
+        model.setRowCount(0);
 
-    // NO cambies columnas aquí; ya están en initCustom()
-    model.setRowCount(0);
+        // Directorio actual y archivos
+        p3.Directory dirActual = fs.getCurrent();
+        java.util.List<p3.FileItem> archivos = new java.util.ArrayList<>(dirActual.getFiles().values());
+        archivos.sort(java.util.Comparator.comparing(p3.FileItem::getName));
 
-    // Directorio actual y archivos
-    p3.Directory dirActual = fs.getCurrent();
-    java.util.List<p3.FileItem> archivos = new java.util.ArrayList<>(dirActual.getFiles().values());
-    archivos.sort(java.util.Comparator.comparing(p3.FileItem::getName));
+        boolean pobladoPorOrganizacion = false;
 
-    boolean pobladoPorOrganizacion = false;
-
-    if (modoArchivos == ModoArchivos.ORGANIZACION) {
-        p3.FileOrganization org = fs.getCurrentOrg();
-        if (org != null) {
-            String showText;
-            try { showText = org.show(); } catch (Exception ex) { showText = null; }
-
-            java.util.List<String> ordenClaves = extraerClavesDeShow(showText);
-            if (!ordenClaves.isEmpty()) {
-                for (String clave : ordenClaves) {
-                    p3.FileItem archivo = buscarArchivoPorClave(archivos, clave);
-                    String nombreArchivo = (archivo != null) ? archivo.getName() : "(sin archivo)";
-                    String contenido = (archivo != null && archivo.getContent() != null) ? archivo.getContent() : "";
-                    String preview = contenido.replace("\n", " ");
-                    if (preview.length() > 100) preview = preview.substring(0, 100) + "...";
-                    int size = contenido.length();
-
-                    String orgInfo = etiquetaOrganizacion(org, clave, showText);
-                    model.addRow(new Object[]{nombreArchivo, clave, orgInfo, size, preview});
+        if (modoArchivos == ModoArchivos.ORGANIZACION) {
+            p3.FileOrganization org = fs.getCurrentOrg();
+            if (org != null) {
+                String showText;
+                try {
+                    showText = org.show();
+                } catch (Exception ex) {
+                    showText = null;
                 }
-                pobladoPorOrganizacion = true;
+
+                java.util.List<String> ordenClaves = extraerClavesDeShow(showText);
+                if (!ordenClaves.isEmpty()) {
+                    for (String clave : ordenClaves) {
+                        p3.FileItem archivo = buscarArchivoPorClave(archivos, clave);
+                        String nombreArchivo = (archivo != null) ? archivo.getName() : "(sin archivo)";
+                        String contenido = (archivo != null && archivo.getContent() != null) ? archivo.getContent() : "";
+                        String preview = contenido.replace("\n", " ");
+                        if (preview.length() > 100) {
+                            preview = preview.substring(0, 100) + "...";
+                        }
+                        int size = contenido.length();
+
+                        String orgInfo = etiquetaOrganizacion(org, clave, showText);
+                        model.addRow(new Object[]{nombreArchivo, clave, orgInfo, size, preview});
+                    }
+                    pobladoPorOrganizacion = true;
+                }
             }
         }
+
+        // Fallback — si la organización no pudo poblar filas, muestra archivos del directorio actual
+        if (!pobladoPorOrganizacion) {
+            for (p3.FileItem f : archivos) {
+                String contenido = f.getContent();
+                String preview = (contenido == null) ? "" : contenido.replace("\n", " ");
+                if (preview.length() > 100) {
+                    preview = preview.substring(0, 100) + "...";
+                }
+                int size = (contenido == null) ? 0 : contenido.length();
+                String clave = extraerClaveDesdeContenido(contenido);
+                String orgInfo = (modoArchivos == ModoArchivos.ORGANIZACION) ? "(sin orden org)" : "";
+                model.addRow(new Object[]{f.getName(), clave, orgInfo, size, preview});
+            }
+        }
+
+        // Aplicar RowSorter para ver el orden en la UI según organización (cosmético)
+        applyRowSorterPorOrganizacion();
     }
 
-    // Fallback — si la organización no pudo poblar filas, muestra archivos del directorio actual
-    if (!pobladoPorOrganizacion) {
-        for (p3.FileItem f : archivos) {
-            String contenido = f.getContent();
-            String preview = (contenido == null) ? "" : contenido.replace("\n", " ");
-            if (preview.length() > 100) preview = preview.substring(0, 100) + "...";
-            int size = (contenido == null) ? 0 : contenido.length();
-            String clave = extraerClaveDesdeContenido(contenido);
-            String orgInfo = (modoArchivos == ModoArchivos.ORGANIZACION) ? "(sin orden org)" : "";
-            model.addRow(new Object[]{f.getName(), clave, orgInfo, size, preview});
+    private void applyRowSorterPorOrganizacion() {
+        if (jTableArchivosMemoria == null) {
+            return;
+        }
+        javax.swing.table.DefaultTableModel tm
+                = (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
+
+        javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter
+                = new javax.swing.table.TableRowSorter<>(tm);
+
+        jTableArchivosMemoria.setRowSorter(sorter);
+
+        p3.FileOrganization org = fs.getCurrentOrg();
+        if (org == null) {
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+            return;
+        }
+        String type = org.getClass().getSimpleName();
+
+        if (type.contains("Hash")) {
+            // Orden por bucket (columna 2 "Org Info": "Hash bkt=<n>")
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(2, javax.swing.SortOrder.ASCENDING)));
+        } else if (type.contains("SecuencialIndexado")) {
+            // Si orgInfo es "SecIndex pos=<n>", puedes extraer el número con un comparator custom;
+            // de forma simple, ordena por Clave (col 1).
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
+        } else if (type.contains("Secuencial")) {
+            // Orden por clave (col 1)
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
+        } else if (type.contains("Pile")) {
+            // Pile: ya poblamos en orden de inserción, aquí no ordenamos (o por nombre de archivo)
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+        } else {
+            // Indexado/otros: por nombre de archivo
+            sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
         }
     }
-
-    // Aplicar RowSorter para ver el orden en la UI según organización (cosmético)
-    applyRowSorterPorOrganizacion();
-}
-
-private void applyRowSorterPorOrganizacion() {
-    if (jTableArchivosMemoria == null) return;
-    javax.swing.table.DefaultTableModel tm =
-        (javax.swing.table.DefaultTableModel) jTableArchivosMemoria.getModel();
-
-    javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter =
-        new javax.swing.table.TableRowSorter<>(tm);
-
-    jTableArchivosMemoria.setRowSorter(sorter);
-
-    p3.FileOrganization org = fs.getCurrentOrg();
-    if (org == null) {
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
-        return;
-    }
-    String type = org.getClass().getSimpleName();
-
-    if (type.contains("Hash")) {
-        // Orden por bucket (columna 2 "Org Info": "Hash bkt=<n>")
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(2, javax.swing.SortOrder.ASCENDING)));
-    } else if (type.contains("SecuencialIndexado")) {
-        // Si orgInfo es "SecIndex pos=<n>", puedes extraer el número con un comparator custom;
-        // de forma simple, ordena por Clave (col 1).
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
-    } else if (type.contains("Secuencial")) {
-        // Orden por clave (col 1)
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(1, javax.swing.SortOrder.ASCENDING)));
-    } else if (type.contains("Pile")) {
-        // Pile: ya poblamos en orden de inserción, aquí no ordenamos (o por nombre de archivo)
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
-    } else {
-        // Indexado/otros: por nombre de archivo
-        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
-    }
-}
 
 // ===== Helpers de mapeo/parseo =====
-private p3.FileItem buscarArchivoPorClave(java.util.List<p3.FileItem> archivos, String clave) {
-    if (clave == null) return null;
-    for (p3.FileItem f : archivos) {
-        String c = f.getContent();
-        if (c != null && c.contains("no=" + clave)) return f;
-    }
-    return null;
-}
-
-private String extraerClaveDesdeContenido(String contenido) {
-    if (contenido == null) return null;
-    int p = contenido.indexOf("no=");
-    if (p >= 0) {
-        int end = contenido.indexOf("\n", p);
-        String line = (end > p) ? contenido.substring(p, end) : contenido.substring(p);
-        int eq = line.indexOf('=');
-        if (eq >= 0 && eq + 1 < line.length()) {
-            return line.substring(eq + 1).trim();
+    private p3.FileItem buscarArchivoPorClave(java.util.List<p3.FileItem> archivos, String clave) {
+        if (clave == null) {
+            return null;
         }
-    }
-    return null;
-}
-
-/** Extrae claves en el orden que muestra org.show() */
-private java.util.List<String> extraerClavesDeShow(String showText) {
-    java.util.List<String> out = new java.util.ArrayList<>();
-    if (showText == null) return out;
-    String[] lines = showText.split("\n");
-    for (String ln : lines) {
-        int p = ln.indexOf("no=");
-        if (p >= 0) {
-            int end = ln.indexOf(",", p);
-            String segment = (end > p) ? ln.substring(p, end) : ln.substring(p);
-            int eq = segment.indexOf('=');
-            if (eq >= 0 && eq + 1 < segment.length()) {
-                String clave = segment.substring(eq + 1).trim();
-                if (!clave.isEmpty()) out.add(clave);
+        for (p3.FileItem f : archivos) {
+            String c = f.getContent();
+            if (c != null && c.contains("no=" + clave)) {
+                return f;
             }
         }
+        return null;
     }
-    return out;
-}
 
-private String etiquetaOrganizacion(p3.FileOrganization org, String clave, String showText) {
-    String type = (org == null) ? "" : org.getClass().getSimpleName();
-    if (type.contains("Pile")) return "Pile (inserción)";
-    if (type.contains("SecuencialIndexado")) {
-        Integer pos = extraerPosicionDeIndice(showText, clave);
-        return (pos != null) ? ("SecIndex pos=" + pos) : "SecIndex";
+    private String extraerClaveDesdeContenido(String contenido) {
+        if (contenido == null) {
+            return null;
+        }
+        int p = contenido.indexOf("no=");
+        if (p >= 0) {
+            int end = contenido.indexOf("\n", p);
+            String line = (end > p) ? contenido.substring(p, end) : contenido.substring(p);
+            int eq = line.indexOf('=');
+            if (eq >= 0 && eq + 1 < line.length()) {
+                return line.substring(eq + 1).trim();
+            }
+        }
+        return null;
     }
-    if (type.contains("Secuencial")) return "Secuencial (orden clave)";
-    if (type.contains("Indexado")) return "Indexado (map)";
-    if (type.contains("Hash")) {
-        int M = 97;
-        int bucket = (clave != null) ? Math.floorMod(clave.hashCode(), M) : -1;
-        return (bucket >= 0) ? ("Hash bkt=" + bucket) : "Hash";
-    }
-    return "Org";
-}
 
-private Integer extraerPosicionDeIndice(String showText, String clave) {
-    if (showText == null || clave == null) return null;
-    int iStart = showText.indexOf("Índice");
-    if (iStart < 0) return null;
-    int braceStart = showText.indexOf("{", iStart);
-    int braceEnd = showText.indexOf("}", iStart);
-    if (braceStart >= 0 && braceEnd > braceStart) {
-        String inside = showText.substring(braceStart + 1, braceEnd);
-        String[] entries = inside.split(",");
-        for (String e : entries) {
-            String[] kv = e.trim().split("=");
-            if (kv.length == 2) {
-                String key = kv[0].trim();
-                if (clave.equals(key)) {
-                    try { return Integer.parseInt(kv[1].trim()); }
-                    catch (NumberFormatException ignore) {}
+    /**
+     * Extrae claves en el orden que muestra org.show()
+     */
+    private java.util.List<String> extraerClavesDeShow(String showText) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (showText == null) {
+            return out;
+        }
+        String[] lines = showText.split("\n");
+        for (String ln : lines) {
+            int p = ln.indexOf("no=");
+            if (p >= 0) {
+                int end = ln.indexOf(",", p);
+                String segment = (end > p) ? ln.substring(p, end) : ln.substring(p);
+                int eq = segment.indexOf('=');
+                if (eq >= 0 && eq + 1 < segment.length()) {
+                    String clave = segment.substring(eq + 1).trim();
+                    if (!clave.isEmpty()) {
+                        out.add(clave);
+                    }
                 }
             }
         }
+        return out;
     }
-    return null;
-}
 
+    private String etiquetaOrganizacion(p3.FileOrganization org, String clave, String showText) {
+        String type = (org == null) ? "" : org.getClass().getSimpleName();
+        if (type.contains("Pile")) {
+            return "Pile (inserción)";
+        }
+        if (type.contains("SecuencialIndexado")) {
+            Integer pos = extraerPosicionDeIndice(showText, clave);
+            return (pos != null) ? ("SecIndex pos=" + pos) : "SecIndex";
+        }
+        if (type.contains("Secuencial")) {
+            return "Secuencial (orden clave)";
+        }
+        if (type.contains("Indexado")) {
+            return "Indexado (map)";
+        }
+        if (type.contains("Hash")) {
+            int M = 97;
+            int bucket = (clave != null) ? Math.floorMod(clave.hashCode(), M) : -1;
+            return (bucket >= 0) ? ("Hash bkt=" + bucket) : "Hash";
+        }
+        return "Org";
+    }
 
+    private Integer extraerPosicionDeIndice(String showText, String clave) {
+        if (showText == null || clave == null) {
+            return null;
+        }
+        int iStart = showText.indexOf("Índice");
+        if (iStart < 0) {
+            return null;
+        }
+        int braceStart = showText.indexOf("{", iStart);
+        int braceEnd = showText.indexOf("}", iStart);
+        if (braceStart >= 0 && braceEnd > braceStart) {
+            String inside = showText.substring(braceStart + 1, braceEnd);
+            String[] entries = inside.split(",");
+            for (String e : entries) {
+                String[] kv = e.trim().split("=");
+                if (kv.length == 2) {
+                    String key = kv[0].trim();
+                    if (clave.equals(key)) {
+                        try {
+                            return Integer.parseInt(kv[1].trim());
+                        } catch (NumberFormatException ignore) {
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     private int indexOf(java.util.List<String> list, String key) {
         for (int i = 0; i < list.size(); i++) {
@@ -1693,8 +1689,6 @@ private Integer extraerPosicionDeIndice(String showText, String clave) {
             return null;
         }
     }
-
-
 
     /**
      * @param args the command line arguments
