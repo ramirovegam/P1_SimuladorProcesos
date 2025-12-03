@@ -83,32 +83,52 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         // ==========================
         // Consola del sistema de archivos
         // ==========================
-        jTextAreaConsola.setEnabled(true);      // conserva tus colores/estilo
-        jTextAreaConsola.setEditable(false);    // solo lectura
+        jTextAreaConsola.setEnabled(true);
+        jTextAreaConsola.setEditable(false);
         jTextAreaConsola.setText("");
         log("Bienvenido. Escribe 'help'.");
         prompt();
 
         // ==========================
-        // Árbol (JTree) del sistema de archivos
+        // Árbol del sistema de archivos
         // ==========================
-        // Refresca el árbol inicial usando el flag anti-bucle para evitar ciclos
         updatingTree = true;
         p3.TreeAdapter.refreshJTree(jTreeArbol, fs.getRoot(), fs.getCurrent());
         updatingTree = false;
 
-        // Listener: al seleccionar un nodo del JTree, cambiar cwd (sin refrescar árbol aquí)
+        // Renderizador para íconos (carpeta vs archivo)
+        jTreeArbol.setCellRenderer(new javax.swing.tree.DefaultTreeCellRenderer() {
+            @Override
+            public java.awt.Component getTreeCellRendererComponent(
+                    javax.swing.JTree tree, Object value, boolean sel,
+                    boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                java.awt.Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+                if (value instanceof javax.swing.tree.DefaultMutableTreeNode) {
+                    Object userObj = ((javax.swing.tree.DefaultMutableTreeNode) value).getUserObject();
+                    if (userObj instanceof p3.TreeAdapter.FsNode) {
+                        p3.TreeAdapter.FsNode node = (p3.TreeAdapter.FsNode) userObj;
+                        if (node.isDirectory) {
+                            setIcon(javax.swing.UIManager.getIcon("FileView.directoryIcon")); // ícono carpeta
+                        } else {
+                            setIcon(javax.swing.UIManager.getIcon("FileView.fileIcon")); // ícono archivo
+                        }
+                    }
+                }
+                return c;
+            }
+        });
+
+        // Listener para selección en el JTree
         jTreeArbol.addTreeSelectionListener(e -> {
             if (updatingTree) {
-                return; // ignora cambios programáticos (cuando setModel/selectPath)
+                return;
             }
             javax.swing.tree.TreePath tp = e.getPath();
             StringBuilder sb = new StringBuilder();
-            Object[] segs = tp.getPath();
-            for (Object o : segs) {
+            for (Object o : tp.getPath()) {
                 String s = o.toString();
                 if ("/".equals(s)) {
-                    continue; // raíz textual del JTree
+                    continue;
                 }
                 if (sb.length() == 0) {
                     sb.append("/").append(s);
@@ -119,78 +139,61 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             String target = sb.length() == 0 ? "/" : sb.toString();
             String r = fs.cd(target);
             log(r);
-            // NO refrescamos el árbol aquí para evitar el ciclo.
             prompt();
+            try {
+                refreshArchivosMemoriaPanel();
+            } catch (Exception ignore) {
+            }
         });
 
-        // Listener: ENTER en la entrada de la consola ejecuta el comando
+        // Listener para ejecutar comandos en consola
         jTextFieldEntrada.addActionListener(e -> ejecutarComandoDesdeUI());
 
         // ==========================
-        // Simulador de Planificación (procesos)
+        // Simulador de planificación
         // ==========================
         modeloTabla = (DefaultTableModel) tablaProcesos.getModel();
-        // Limpia filas nulas generadas por default (si las hay)
         modeloTabla.setRowCount(0);
-        // Asegura cabeceras correctas
-        if (modeloTabla.getColumnCount() < 3) {
-            modeloTabla.setColumnCount(3);
-        }
         modeloTabla.setColumnIdentifiers(new Object[]{"ID", "Llegada", "Ráfaga"});
-
-        // Inserta el GanttPanel en el panelGantt que ya tienes en el formulario
         gantt.setPreferredSize(new Dimension(600, 200));
         panelGantt.setLayout(new BorderLayout());
         panelGantt.add(gantt, BorderLayout.CENTER);
-        panelGantt.revalidate();
-        panelGantt.repaint();
 
         // ==========================
-        // Algoritmos de reemplazo de página
+        // Simulador de reemplazo de página
         // ==========================
-        // 1) Tabla de Paguinas (asegura un modelo con UNA columna)
-        javax.swing.table.DefaultTableModel modeloPaguinas
-                = new javax.swing.table.DefaultTableModel(new Object[]{"Paguina"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false; // no editable por el usuario
-            }
-        };
+        DefaultTableModel modeloPaguinas = new DefaultTableModel(new Object[]{"Paguina"}, 0);
         jTablePaguinas.setModel(modeloPaguinas);
-        // Opcional: ancho amigable
-        if (jTablePaguinas.getColumnModel().getColumnCount() > 0) {
-            jTablePaguinas.getColumnModel().getColumn(0).setPreferredWidth(80);
-        }
-
-        // 2) Lista interna para secuencia (por si la usas en otros métodos)
         if (listaPaginas == null) {
             listaPaginas = new ArrayList<>();
         }
-
-        // 3) Área de resultados (texto) para mostrar resumen al terminar RUN
-        jPanelResultadosRemplazo.setLayout(new java.awt.BorderLayout());
-        jPanelResultadosRemplazo.setMinimumSize(new java.awt.Dimension(608, 120));
-        jPanelResultadosRemplazo.setPreferredSize(new java.awt.Dimension(608, 160));
-
-        resultadosRemplazoArea = new javax.swing.JTextArea();
+        jPanelResultadosRemplazo.setLayout(new BorderLayout());
+        resultadosRemplazoArea = new JTextArea();
         resultadosRemplazoArea.setEditable(false);
-        resultadosRemplazoArea.setLineWrap(true);
-        resultadosRemplazoArea.setWrapStyleWord(true);
-        resultadosRemplazoArea.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
-        resultadosRemplazoArea.setBackground(new java.awt.Color(245, 246, 250));
-        resultadosRemplazoArea.setColumns(50);
-        resultadosRemplazoArea.setRows(6);
+        resultadosRemplazoArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        JScrollPane resultadosScroll = new JScrollPane(resultadosRemplazoArea);
+        jPanelResultadosRemplazo.add(resultadosScroll, BorderLayout.CENTER);
 
-        javax.swing.JScrollPane resultadosScroll = new javax.swing.JScrollPane(resultadosRemplazoArea);
-        resultadosScroll.setHorizontalScrollBarPolicy(
-                javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        // ==========================
+        // Panel Archivos Memoria
+        // ==========================
+        if (jTableArchivosMemoria == null) {
+            jPanelArchivosMemoria.setLayout(new BorderLayout());
+            jTableArchivosMemoria = new JTable(new DefaultTableModel(
+                    new Object[][]{}, new String[]{"Archivo", "Clave", "Org Info", "Tamaño", "Preview"}) {
+                @Override
+                public boolean isCellEditable(int r, int c) {
+                    return false;
+                }
+            });
+            jPanelArchivosMemoria.add(new JScrollPane(jTableArchivosMemoria), BorderLayout.CENTER);
+        }
 
-        // Asegura que el área se expanda con el viewport
-        resultadosScroll.getViewport().addChangeListener(e
-                -> resultadosRemplazoArea.setSize(resultadosScroll.getViewport().getSize())
-        );
-
-        jPanelResultadosRemplazo.add(resultadosScroll, java.awt.BorderLayout.CENTER);
+        // Primer refresco del panel
+        try {
+            refreshArchivosMemoriaPanel();
+        } catch (Exception ignore) {
+        }
     }
 
     /**
