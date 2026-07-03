@@ -4,30 +4,30 @@
   <imguras/principal.png
 </p>
 
-## 📖 Descripción
+## Descripción
 
 Simulador de Procesos desarrollado en Java como proyecto académico. La aplicación permite representar y visualizar el comportamiento de procesos dentro de un sistema operativo, facilitando la comprensión de conceptos relacionados con la administración y ejecución de procesos.
 
-## 🎯 Objetivos
+##  Objetivos
 
 - Comprender el ciclo de vida de los procesos.
 - Simular la ejecución de tareas dentro del sistema.
 - Visualizar estados y transiciones de procesos.
 - Aplicar conceptos de programación orientada a objetos en Java.
 
-## 🚀 Características
+##  Características
 
-✅ Creación de procesos.
+-Creación de procesos.
 
-✅ Simulación de ejecución.
+-Simulación de ejecución.
 
-✅ Interfaz gráfica amigable.
+-Interfaz gráfica amigable.
 
-✅ Visualización de estados de los procesos.
+-Visualización de estados de los procesos.
 
-✅ Proyecto desarrollado con Java y NetBeans.
+-Proyecto desarrollado con Java y NetBeans.
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - Java
 - Swing
@@ -36,19 +36,19 @@ Simulador de Procesos desarrollado en Java como proyecto académico. La aplicaci
 
 ## 📸 Capturas del Sistema
 
-### Pantalla Principal
+### Simulador de Sistema de Archivos y Organización de Alumnos
 
 capturas/principal.png
 
-### Simulación de Procesos
+### Algoritmos de Reemplazo de Página
 
-capturas/simulacion.png
+capturas/captura2.png
 
-### Resultados
+###  Simulador de Sistema de Archivos y Organización de Alumnos
 
-capturas/resultados.png
+capturas/captura3.png
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 P1_SimuladorProcesos/
@@ -58,10 +58,6 @@ P1_SimuladorProcesos/
 ├── dist/
 ├── nbproject/
 ├── capturas/
-│   ├── principal.png
-│   ├── simulacion.png
-│   └── resultados.png
-│
 ├── build.xml
 ├── manifest.mf
 └── README.md
@@ -86,12 +82,12 @@ git clone https://github.com/cakeprogramming12/P1_SimuladorProcesos.git
 - Compilar el proyecto.
 - Ejecutar la clase principal desde NetBeans.
 
-## 👨‍💻 Autor
+## Autor
 
 **Ramiro Vega Meza**
 
 Proyecto académico desarrollado para el estudio y simulación de procesos en sistemas operativos.
 
-## 📜 Licencia
+## Licencia
 
 Este proyecto es de uso académico y educativo.
