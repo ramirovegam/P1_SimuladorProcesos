@@ -38,21 +38,15 @@ Simulador de Procesos desarrollado en Java como proyecto académico. La aplicaci
 
 ### Simulador de Sistema de Archivos y Organización de Alumnos
 
-<p align="center">
-  capturas/captura1.png
-</p>
+![Captura 1](capturas/captura1.png)
 
 ### Algoritmos de Reemplazo de Página
 
-<p align="center">
-  capturas/captura2.png
-</p>
+![Captura 1](capturas/captura2.png)
 
 ### Gestión de Archivos y Alumnos
 
-<p align="center">
-  <imguras/captura3.png
-</p>
+![Captura 1](capturas/captura3.png)
 
 ## Estructura del Proyecto
 
