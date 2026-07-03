@@ -34,19 +34,25 @@ Simulador de Procesos desarrollado en Java como proyecto académico. La aplicaci
 - NetBeans IDE
 - Apache Ant
 
-## 📸 Capturas del Sistema
+## Capturas del Sistema
 
 ### Simulador de Sistema de Archivos y Organización de Alumnos
 
-capturas/principal.png
+<p align="center">
+  capturas/captura1.png
+</p>
 
 ### Algoritmos de Reemplazo de Página
 
-capturas/captura2.png
+<p align="center">
+  capturas/captura2.png
+</p>
 
-###  Simulador de Sistema de Archivos y Organización de Alumnos
+### Gestión de Archivos y Alumnos
 
-capturas/captura3.png
+<p align="center">
+  <imguras/captura3.png
+</p>
 
 ## Estructura del Proyecto
 
